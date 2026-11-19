@@ -96,12 +96,11 @@ export class World {
   }
 
   update(game, camX, t) {
-    this.paint.updateField(game);
     this.kiosks.forEach((k, i) => {
       const on = game.playing && game.kiosk && game.kiosk.i === i;
       k.glow.material.opacity += ((on ? 0.75 + 0.25 * Math.sin(t * 16) : 0.12) - k.glow.material.opacity) * 0.2;
     });
-    this.sky.material.uniforms.uColour.value = game.colourAt(camX);
+    this.sky.material.uniforms.uColour.value = Math.max(game.colourAt(camX), this.paint.shared.uGlobal.value);
     this.sky.position.x = camX * 0.9;
   }
 }

@@ -95,7 +95,7 @@ export class Game {
       for (const card of this.cards) {
         if (card.state !== 'locked') continue;
         if (hitsBox(c, { x0: card.x - CARD.hw, x1: card.x + CARD.hw, y0: card.y + CARD.y0, y1: card.y + CARD.y1 })) {
-          this.emit({ type: 'hit', i: card.i });
+          this.emit({ type: 'hit', i: card.i, x: c.x, y: c.y });
           if (++card.hits >= BEAM.need) this.open(card);
           break;
         }

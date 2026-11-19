@@ -1,23 +1,79 @@
 // Reward City — painted art: loads the sprites listed in assets/paint/manifest.json and draws them with one shader
-// that shows the watercolour grey until colour comes back. Where colour has come back is a 1-D field over x, filled
-// each frame from game.colourAt(x); its edge gets a soft noisy wet-paint border.
+// that shows the watercolour grey until colour comes back. Where colour has come back is a 2-D field over (x, y)
+// painted by ColourField from growing blobs ("paint sources"); its edge gets a noisy, slightly darker wet-paint rim.
 import * as THREE from 'three';
 
-const FIELD_X0 = -30, FIELD_X1 = 230, FIELD_N = 520;
+const FX0 = -30, FX1 = 230, FY0 = -10, FY1 = 40, RES = 0.5;      // field covers this world rect, 0.5 m per pixel
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const easeOut = (t) => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
+
+export class ColourField {
+  constructor() {
+    this.w = Math.round((FX1 - FX0) / RES); this.h = Math.round((FY1 - FY0) / RES);
+    this.canvas = document.createElement('canvas'); this.canvas.width = this.w; this.canvas.height = this.h;
+    this.ctx = this.canvas.getContext('2d');
+    this.texture = new THREE.CanvasTexture(this.canvas);
+    this.texture.minFilter = this.texture.magFilter = THREE.LinearFilter; this.texture.generateMipmaps = false;
+    this.sources = []; this.dirty = true; this.floodAt = -1; this.nextFlood = 0;
+    this.rnd = ((s) => () => ((s = (s * 16807) % 2147483647) / 2147483647))(99);
+  }
+  reset() { this.sources = []; this.dirty = true; this.floodAt = -1; }
+  add(x, y, r, t0, dur, a = 1) { this.sources.push({ x, y, r, t0, dur, a }); }
+  // a card opened at (x, y): one big blob, satellites around it, and a plume climbing the buildings
+  splash(x, y, t, grown = false) {
+    const R = this.rnd, T = grown ? -99 : t;
+    this.add(x, y + 0.5, 8.5, T, 2.5);
+    for (let k = 0; k < 8; k++) this.add(x + (R() * 2 - 1) * 7, y + R() * 9, 2.5 + R() * 2.5, T + 0.2 + R(), 1.5 + R(), 0.9);
+    for (const dy of [4, 8, 12]) this.add(x + (R() * 2 - 1) * 2.5, y + dy, 5 + R() * 3, T + 0.3 + dy * 0.07, 2.2, 0.85);
+    this.dirty = true;
+  }
+  // finale: blobs keep landing around the camera while uGlobal brings up everything else
+  startFlood(t) { this.floodAt = t; this.nextFlood = t; }
+  flood(t, camX, camY) {
+    if (this.floodAt < 0) return;
+    const R = this.rnd;
+    while (this.nextFlood <= t && t - this.floodAt < 7) {
+      this.add(camX + (R() * 2 - 1) * 22, camY - 3 + R() * 16, 4 + R() * 5, this.nextFlood, 1.2 + R() * 1.2);
+      this.nextFlood += 0.12;
+    }
+  }
+  global(t) { return this.floodAt < 0 ? 0 : clamp((t - this.floodAt - 1) / 7, 0, 1) ** 1.5; }
+  update(t) {
+    const growing = this.sources.some(s => t < s.t0 + s.dur);
+    if (!growing && !this.dirty) return;
+    const c = this.ctx;
+    c.globalCompositeOperation = 'source-over'; c.fillStyle = '#000'; c.fillRect(0, 0, this.w, this.h);
+    c.globalCompositeOperation = 'lighter';
+    for (const s of this.sources) {
+      const k = easeOut((t - s.t0) / s.dur); if (k <= 0) continue;
+      const r = (s.r * k) / RES, px = (s.x - FX0) / RES, py = (FY1 - s.y) / RES;
+      const g = c.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0, `rgba(255,255,255,${s.a})`); g.addColorStop(0.5, `rgba(255,255,255,${s.a * 0.9})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(px, py, r, 0, Math.PI * 2); c.fill();
+    }
+    this.texture.needsUpdate = true; this.dirty = false;
+  }
+}
 
 const COMMON = /* glsl */`
-uniform sampler2D uField; uniform vec2 uFieldRange; uniform float uForce; uniform float uHaze; uniform vec3 uMist;
+uniform sampler2D uField; uniform vec4 uFieldRect; uniform float uGlobal; uniform float uForce; uniform float uHaze; uniform vec3 uMist;
 varying vec2 vUv; varying vec3 vWorld; varying vec3 vNormalW;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y); }
 float washAt(vec3 w){
-  float f = texture2D(uField, vec2((w.x - uFieldRange.x) * uFieldRange.y, 0.5)).r;
+  vec2 uv = clamp(vec2((w.x - uFieldRect.x) * uFieldRect.z, (w.y - uFieldRect.y) * uFieldRect.w), 0.001, 0.999);
+  float f = max(texture2D(uField, uv).r, uGlobal);
   float n = vnoise(w.xy * 0.45 + w.z * 0.13) * 0.6 + vnoise(w.xy * 1.7 + 3.1) * 0.4;
   return max(uForce, smoothstep(0.40, 0.60, f + (n - 0.5) * 0.6));
 }
 vec3 greyOf(vec3 c){ float L = dot(c, vec3(0.299, 0.587, 0.114)); return mix(vec3(L) * vec3(1.03, 1.0, 0.95), vec3(0.80, 0.79, 0.76), 0.25); }
-vec3 finish(vec3 c){ float t = washAt(vWorld); return mix(mix(greyOf(c), c, t), uMist, uHaze); }
+vec3 finish(vec3 c){
+  float t = washAt(vWorld);
+  float edge = 1.0 - abs(t * 2.0 - 1.0);                 // watercolour dries darker at the rim of a wash
+  vec3 wet = c * (1.0 - edge * 0.22);
+  return mix(mix(greyOf(c), wet, t), uMist, uHaze);
+}
 `;
 const VERT = /* glsl */`
 varying vec2 vUv; varying vec3 vWorld; varying vec3 vNormalW;
@@ -39,13 +95,11 @@ export class Paint {
 
   constructor(man, tex) {
     this.man = man; this.tex = tex;
-    this.fieldData = new Uint8Array(FIELD_N * 4);
-    this.field = new THREE.DataTexture(this.fieldData, FIELD_N, 1, THREE.RGBAFormat);
-    this.field.magFilter = this.field.minFilter = THREE.LinearFilter;
-    this.field.needsUpdate = true;
+    this.field = new ColourField();
     this.shared = {
-      uField: { value: this.field },
-      uFieldRange: { value: new THREE.Vector2(FIELD_X0, 1 / (FIELD_X1 - FIELD_X0)) },
+      uField: { value: this.field.texture },
+      uFieldRect: { value: new THREE.Vector4(FX0, FY0, 1 / (FX1 - FX0), 1 / (FY1 - FY0)) },
+      uGlobal: { value: 0 },
       uMist: { value: new THREE.Color('#dedbd4') },
     };
   }
@@ -124,12 +178,6 @@ export class Paint {
     });
   }
 
-  updateField(game) {
-    const d = this.fieldData;
-    for (let i = 0; i < FIELD_N; i++) {
-      const x = FIELD_X0 + (i / (FIELD_N - 1)) * (FIELD_X1 - FIELD_X0);
-      d[i * 4] = Math.round(game.colourAt(x) * 255);
-    }
-    this.field.needsUpdate = true;
-  }
+  // per frame: grow the field; sky + global flood follow the game clock
+  update(t) { this.field.update(t); this.shared.uGlobal.value = this.field.global(t); }
 }

@@ -8,6 +8,7 @@ import { CardsView, loadCardTextures } from './cards.js';
 import { Hud } from './hud.js';
 import { Input } from './input.js';
 import { Paint } from './paint.js';
+import { Fx } from './fx.js';
 import { CARDS } from './config.js';
 import { groundBelow } from './level.js';
 
@@ -49,10 +50,17 @@ if (FLAGS.colour) game.finaleT = 8.5;
 const world = new World(scene, paint);
 let cards = new CardsView(scene, game, cardTex, paint);
 const coins = new CoinRenderer(); scene.add(coins.mesh);
+const fx = new Fx(scene, cardTex);
 hud.syncSlots(game);
+function seedField() {                                   // cards opened by ?cards=n start fully painted
+  for (const c of game.cards) if (c.state !== 'locked') paint.field.splash(c.x, c.y, 0, true);
+  if (FLAGS.colour) paint.field.floodAt = -99;
+}
+seedField();
 
 let state = 'title';
-const cam = { x: game.player.x, y: 2, look: 1 };
+const cam = { x: game.player.x, y: 2, look: 1, push: 0, pull: 0 };
+const glints = new Map();
 const v = new THREE.Vector3();
 
 function start() { state = 'play'; hud.start(); }
@@ -61,15 +69,23 @@ function restart() {
   scene.remove(cards.bridge.mesh, cards.tower.mesh, cards.box.g);
   game = new Game({ x: FLAGS.x, cards: FLAGS.cards });
   cards = new CardsView(scene, game, cardTex, paint);
+  paint.field.reset(); fx.reset(); seedField();
   hud.syncSlots(game); hud.restart(); state = 'play';
 }
 
 function handle(e) {
   cards.onEvent(e, game);
+  if (e.type === 'hit' && e.i !== 'box') fx.sparkAt(e.x, e.y);
   if (e.type === 'unlock') {
-    cards.facePosition(e.i, v).project(camera);
+    const c = game.cards[e.i];
+    paint.field.splash(c.x, c.y, game.time);
+    cards.facePosition(e.i, v); fx.burst(v.x, v.y);
+    v.project(camera);
     hud.fly(e.i, (v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight);
+    cam.push = 1;
   }
+  if (e.type === 'land') fx.dust(game.player.x, game.player.y);
+  if (e.type === 'finale') { paint.field.startFlood(game.time); cards.facePosition(0, v); fx.burst(game.box.x, game.box.y + 2.2); }
   if (e.type === 'deny') { hud.pulseMissing(game); hud.hint('the gift box opens with all 8 cards', 2.5); }
   if (e.type === 'empty') hud.hint('out of coins · stand at a VYBS kiosk to play and earn more', 3);
   if (e.type === 'play') hud.hint('playing on VYBS · earning coins', 1.8);
@@ -99,17 +115,35 @@ function frame(now) {
   hero.sync({ x: p.x, y: p.y, facing: p.facing, vx: p.vx, vy: p.vy, onGround: p.onGround,
     beam: game.beaming, play: game.playing, cheer: game.lockT > 0 || game.finaleT >= 0 }, dt * (state === 'title' ? 1 : FLAGS.speed));
 
-  // camera: side-on, looks ahead, rises with the ground
+  // camera: side-on, looks ahead, rises with the ground; pushes in on an unlock, pulls back for the finale
+  const sdt = dt * (state === 'title' ? 1 : FLAGS.speed);
   cam.look += (p.facing * 1.4 - cam.look) * (1 - Math.exp(-1.5 * dt));
   cam.x += (p.x + cam.look - cam.x) * (1 - Math.exp(-4 * dt));
   cam.y += (p.y + 1.9 - cam.y) * (1 - Math.exp(-2.5 * dt));
-  camera.position.set(cam.x, cam.y + 0.6, 12.5);
-  camera.lookAt(cam.x, cam.y - 0.35, 0);
+  cam.push = Math.max(0, cam.push - sdt * 0.8);
+  const pullTo = game.finaleT >= 0 ? Math.min(1, game.finaleT / 4) : 0;
+  cam.pull += (pullTo - cam.pull) * (1 - Math.exp(-1.2 * dt));
+  const pushK = Math.sin(Math.min(1, (1 - cam.push) * 1.25) * Math.PI) * (cam.push > 0 ? 1 : 0);
+  camera.position.set(cam.x, cam.y + 0.6 + cam.pull * 1.6, 12.5 - pushK * 0.8 + cam.pull * 4.5);
+  camera.lookAt(cam.x, cam.y - 0.35 + cam.pull * 1.2, 0);
   sun.position.set(cam.x - 6, cam.y + 12, 9); sun.target.position.set(cam.x, cam.y - 2, 0);
 
   const gy = groundBelowP(p.x, p.y + 0.05);
   blob.visible = gy !== null;
   if (gy !== null) { const hgt = p.y - gy; blob.position.set(p.x, gy + 0.015, 0.05); blob.scale.setScalar(Math.max(0.4, 1 - hgt / 3)); blob.material.opacity = 0.32 * Math.max(0, 1 - hgt / 2.5); }
+  // effects driven by the game state
+  if (state !== 'title') {
+    if (game.finaleT >= 0) { paint.field.flood(game.time, cam.x, cam.y); fx.rain(cam.x, cam.y + cam.pull * 1.6, sdt); }
+    if (game.playing && Math.random() < sdt * 14) fx.playSparkle(hero.spout.x, hero.spout.y);
+    for (const c of game.cards) {
+      if (c.state !== 'locked' || Math.abs(c.x - p.x) > 14) continue;
+      const t = (glints.get(c.i) ?? 0) - sdt;
+      if (t <= 0) { fx.glint(c.x + (Math.random() - 0.5) * 0.8, c.y + 0.8 + Math.random() * 0.55); glints.set(c.i, 1.8 + Math.random() * 1.4); }
+      else glints.set(c.i, t);
+    }
+  }
+  paint.update(game.time);
+  fx.update(sdt);
   world.update(game, cam.x, now / 1000);
   cards.update(game, dt * FLAGS.speed);
   coins.draw(game.coins);

@@ -45,3 +45,10 @@
 - [ ] **4. world.js + cards.js:** greybox and placeholders driven by the game state; coins drawn with `CoinRenderer`.
 - [ ] **5. hud.js + input.js + main.js + index.html:** title → play → end; camera follow (fov 30, ~11.5 m back, look-ahead, smooth y).
 - [ ] **6. Check:** `npm test`; `node tools/playtest.mjs --video` passes with 0 console errors; look at the beat screenshots; commit; check-in with Manuel.
+
+## As built (2026-11-19)
+
+- 29 node tests pass; the autopilot finishes the course in 111 simulated seconds with no respawns (≈ a 2-minute game).
+- `node tools/playtest.mjs` passes in the browser (speed 3: 40 s, 0 errors) with a screenshot per card, finale and end; `--video --speed=1` recorded `art-src/step2-playthrough.mp4` (114 s).
+- Card 6 moved to x 82 so 9 card stairs fit at 84.5–90. Coins hit best from 2.6 m (box 2.9 m).
+- Greybox colour = per-chunk ground tint + coloured building blocks from `game.colourAt(x)`; step 4 swaps it for the painted wash.

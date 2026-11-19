@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reward City</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #2b2f7a; --indigo: #3A43C4; --vybs: #5B69FE; --gold: #FFD401; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #dedbd4; font-family: Kanit, system-ui, sans-serif; color: var(--ink); }
+  canvas { display: block; }
+  #title, #end { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: opacity 1.2s ease; }
+  #title { background: radial-gradient(ellipse 45% 35% at 50% 42%, rgba(246,244,238,.85), rgba(246,244,238,0)); cursor: pointer; gap: 1.2vh; }
+  #title.hidden { opacity: 0; pointer-events: none; }
+  #title h1 { margin: 0; font-weight: 800; font-size: min(11vw, 13vh); letter-spacing: .02em; line-height: 1; color: var(--indigo); text-shadow: 0 .06em 0 var(--gold); }
+  #title .sub { font-size: min(3.4vw, 3vh); letter-spacing: .08em; opacity: .8; }
+  #press { margin-top: 2vh; font-size: min(3vw, 2.6vh); letter-spacing: .3em; text-transform: uppercase; animation: breathe 2.4s ease-in-out infinite; }
+  #keys, #loading { font-size: min(2.6vw, 2vh); opacity: .7; letter-spacing: .06em; }
+  @keyframes breathe { 0%,100% { opacity: .35 } 50% { opacity: .95 } }
+  #hud { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1s ease; }
+  #hud.on { opacity: 1; }
+  #slots { position: absolute; top: max(14px, 2.4vh); left: 50%; transform: translateX(-50%); display: flex; gap: min(1.2vw, 1.2vh); }
+  .slot { width: min(9vw, 8.4vh); aspect-ratio: 320 / 208; border-radius: 6px; overflow: hidden; background: #0002; transition: transform .5s cubic-bezier(.2,1.6,.4,1), filter .6s, opacity .6s; filter: grayscale(1) brightness(.75); opacity: .45; transform: scale(.9); box-shadow: 0 2px 8px #0002; }
+  .slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .slot.on { filter: none; opacity: 1; transform: scale(1); }
+  .slot.pop { transform: scale(1.25); }
+  .slot.pulse { animation: pulse .45s ease 2; }
+  @keyframes pulse { 50% { transform: scale(1.2); opacity: .9; } }
+  .flying { position: fixed; width: 120px; transform: translate(-50%,-50%) rotate(-8deg); border-radius: 8px; box-shadow: 0 8px 26px #0005; transition: left .9s cubic-bezier(.5,0,.3,1), top .9s cubic-bezier(.5,-.4,.3,1), width .9s ease, transform .9s ease; z-index: 5; pointer-events: none; }
+  #meter { position: absolute; left: max(18px, 2.4vh); bottom: max(18px, 2.4vh); width: min(4vw, 3.4vh); height: min(22vw, 18vh); border-radius: 99px; background: #ffffffaa; overflow: hidden; box-shadow: inset 0 0 0 2px #3A43C455, 0 2px 10px #0002; }
+  #meter.low { animation: pulse .8s ease infinite; }
+  #meterFill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(#FFE45C, #F5A700); }
+  #coinIcon { position: absolute; left: max(14px, 2vh); bottom: calc(max(18px, 2.4vh) + min(22vw, 18vh) + 6px); width: min(5vw, 4.2vh); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #FFF2A0, #FFC93A 45%, #E09A00); box-shadow: 0 2px 6px #0003; }
+  #hint { position: absolute; top: calc(max(14px, 2.4vh) + min(9vw, 8.4vh) * .65 + 2.4vh); left: 50%; transform: translateX(-50%); font-size: min(3vw, 2.4vh); letter-spacing: .05em; padding: .3em .9em; border-radius: 99px; background: #ffffffcc; opacity: 0; transition: opacity .6s; white-space: nowrap; }
+  #hint.on { opacity: 1; }
+  #end { opacity: 0; pointer-events: none; gap: 2.2vh; background: radial-gradient(ellipse 60% 45% at 50% 50%, rgba(58,67,196,.55), rgba(58,67,196,0)); color: #fff; }
+  #end.on { opacity: 1; }
+  #endLine { font-weight: 800; font-size: min(7vw, 8vh); text-shadow: 0 4px 18px #0006; }
+  #endCards { display: flex; gap: 1vh; flex-wrap: wrap; justify-content: center; max-width: 90vw; }
+  #endCards img { width: min(10vw, 11vh); border-radius: 6px; box-shadow: 0 4px 14px #0004; }
+  #end .sub { font-size: min(3vw, 2.2vh); letter-spacing: .25em; text-transform: uppercase; opacity: .85; }
+</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/jsm/" } }</script>
+</head>
+<body>
+<div id="title">
+  <h1>REWARD CITY</h1>
+  <div class="sub">play games · earn coins · unlock gift cards</div>
+  <div id="loading">loading…</div>
+  <div id="press" style="display:none">press enter or click</div>
+  <div id="keys">← → walk · space jump · hold J or shift to beam coins · stand at a kiosk to play</div>
+</div>
+<div id="hud">
+  <div id="slots"></div>
+  <div id="coinIcon"></div>
+  <div id="meter"><div id="meterFill"></div></div>
+  <div id="hint"></div>
+</div>
+<div id="end">
+  <div id="endLine"></div>
+  <div id="endCards"></div>
+  <div class="sub">enter · wander on · R · play again</div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

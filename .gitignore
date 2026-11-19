@@ -6,3 +6,4 @@ art-src/**/*.raw.*
 art-src/**/*.png
 tools/playtest/
 art-src/**/*.mp4
+tools/playtest-video/

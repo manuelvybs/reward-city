@@ -47,16 +47,16 @@ export class CardsView {
       return { g, face, backing, bar, barBg, shake: 0, popped: false };
     });
 
-    // bridge: gift cards laid side by side across the gap
-    const n = 9, bw = (BRIDGE.x1 - BRIDGE.x0) / n;
-    this.bridge = { mesh: new THREE.InstancedMesh(new THREE.BoxGeometry(bw * 0.96, 0.08, 1.5), new THREE.MeshStandardMaterial({ roughness: 0.4 }), n), n, bw, t: -1 };
-    for (let i = 0; i < n; i++) this.bridge.mesh.setColorAt(i, new THREE.Color(HUE_LIST[i % HUE_LIST.length]));
-    this.bridge.mesh.castShadow = this.bridge.mesh.receiveShadow = true;
-    this.bridge.mesh.count = 0;
-    // instanced meshes compute their bounds once, on the first frame, when no plank exists yet (a tiny sphere at the
-    // origin): with culling on, the grown bridge would never be drawn once the camera has moved away from x 0
-    this.bridge.mesh.frustumCulled = false;
-    scene.add(this.bridge.mesh);
+    // bridge: a painted footbridge of gift cards (watercolour + ink), drawn a little from above like the street;
+    // squashed to the game's low viewing angle, its deck's middle line sits on the walk height
+    const BW = 8.6, SQUASH = 0.6, man = paint.man.bridge;
+    const natH = BW / (man.w / man.h), deckMid = (man.deckTop + man.deckBottom) / 2;
+    const bridge = paint.sprite('bridge', { x: (BRIDGE.x0 + BRIDGE.x1) / 2, y: 0, z: -0.12, h: natH, force: 1 });
+    bridge.scale.y = SQUASH;
+    bridge.position.y = BRIDGE.y - (1 - deckMid) * natH * SQUASH;
+    bridge.visible = false;
+    scene.add(bridge);
+    this.bridge = { mesh: bridge, t: -1 };
 
     // stairs: stacks of card slabs rising to each step top
     const slabs = [];
@@ -119,18 +119,11 @@ export class CardsView {
       }
     });
 
-    // bridge grows plank by plank once card 3 opens
+    // the bridge paints itself in from left to right once card 3 opens
     if (game.bridge) {
       const b = this.bridge; b.t = b.t < 0 ? (game.cards[2].openedAt < -50 ? 9 : 0) : b.t + dt;
-      const m = new THREE.Matrix4();
-      b.mesh.count = b.n;
-      for (let i = 0; i < b.n; i++) {
-        const k = back((b.t - i * 0.12) / 0.35);
-        m.compose(new THREE.Vector3(BRIDGE.x0 + (i + 0.5) * b.bw, BRIDGE.y - 0.04 - (1 - clamp(k, 0, 1)) * 1.5, -0.2),
-          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), (i % 2 ? 1 : -1) * 0.02), new THREE.Vector3(Math.max(0.001, k), 1, 1));
-        b.mesh.setMatrixAt(i, m);
-      }
-      b.mesh.instanceMatrix.needsUpdate = true;
+      b.mesh.visible = true;
+      b.mesh.material.uniforms.uReveal.value = easeOut(clamp(b.t / 1.3, 0, 1));
     }
     // stairs stack up once card 6 opens
     if (game.tower) {

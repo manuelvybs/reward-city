@@ -271,5 +271,15 @@
   "layer": "prop",
   "metresW": 2.661,
   "metresH": 1.697
+ },
+ "bridge": {
+  "file": "bridge.webp",
+  "w": 1600,
+  "h": 509,
+  "metresH": 1.9,
+  "metresW": 5.973,
+  "main": 1,
+  "deckTop": 0.3418,
+  "deckBottom": 0.725
  }
 }

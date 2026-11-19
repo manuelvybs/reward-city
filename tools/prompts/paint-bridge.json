@@ -1,0 +1,10 @@
+{
+  "prompt": "Use exactly the art style of the reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture. Paint a short footbridge seen exactly from the side as a flat elevation with no perspective, like a piece of a 2D side-scrolling game level: its deck is made of eight giant gift cards laid end to end in a straight horizontal line, each card a different colour (deep indigo, periwinkle blue, emerald green, warm red, gold, lavender, teal, coral), each with a small gold chip and a thin stripe but NO logos, NO letters and NO text. The deck sits on thin rope bindings, with a low sagging rope railing on small wooden posts above it, and a few short ropes hanging below the deck. The bridge fills the whole width of the image edge to edge. Isolated on a plain flat pure white background, nothing else: no ground, no cliffs, no water, no sky, no cast shadow, no text.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png"
+  ],
+  "aspect_ratio": "21:9",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 2
+}

@@ -140,8 +140,10 @@ if (mode === 'sheet') {
     console.log(`${name}-${i - 1}`, m.w + 'x' + m.h, m.metresW + 'm x ' + m.metresH + 'm');
   }
 } else if (mode === 'single') {
-  const [heightM, maxPx] = [+rest[0], +rest[1]];
-  const mask = paperMask(img), buf = await withAlpha(img, mask);
+  const [heightM, maxPx, holes] = [+rest[0], +rest[1], rest[2] === 'holes'];
+  const mask = paperMask(img);
+  if (holes) console.log('cleared', clearHoles(img, mask), 'enclosed paper areas');
+  const buf = await withAlpha(img, mask);
   const [b] = blobs(mask, img.w, img.h, 1000).sort((a, b) => b.area - a.area);
   const all = blobs(mask, img.w, img.h, 200);              // include small detached bits (bow loops, sparkles)
   const x0 = Math.min(...all.map(a => a.x0)), x1 = Math.max(...all.map(a => a.x1)), y0 = Math.min(...all.map(a => a.y0)), y1 = Math.max(...all.map(a => a.y1));

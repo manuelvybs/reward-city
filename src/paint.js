@@ -113,14 +113,21 @@ export class Paint {
     return new THREE.ShaderMaterial({
       transparent: true, depthWrite: o.depthWrite ?? true,
       uniforms: { ...this.shared, map: { value: this.tex[name] }, uForce: { value: o.force ?? 0 }, uHaze: { value: o.haze ?? 0 },
-        uRect: { value: new THREE.Vector4(uv[0], uv[1], uv[2] - uv[0], uv[3] - uv[1]) }, uOpacity: { value: o.opacity ?? 1 } },
+        uRect: { value: new THREE.Vector4(uv[0], uv[1], uv[2] - uv[0], uv[3] - uv[1]) }, uOpacity: { value: o.opacity ?? 1 },
+        uReveal: { value: o.reveal ?? 1 } },
       vertexShader: VERT,
       fragmentShader: COMMON + /* glsl */`
-        uniform sampler2D map; uniform vec4 uRect; uniform float uOpacity;
+        uniform sampler2D map; uniform vec4 uRect; uniform float uOpacity; uniform float uReveal;
         void main(){
           vec4 t = texture2D(map, uRect.xy + vUv * uRect.zw);
           if (t.a < 0.03) discard;
-          gl_FragColor = vec4(finish(t.rgb), t.a * uOpacity);
+          vec3 col = finish(t.rgb);
+          if (uReveal < 0.999) {                                  // paints itself in from the left, wet gold edge
+            float edge = uReveal * 1.1 - 0.05 + (vnoise(vWorld.xy * 2.5) - 0.5) * 0.08;
+            if (vUv.x > edge) discard;
+            col = mix(col, vec3(1.0, 0.86, 0.45), smoothstep(edge - 0.05, edge, vUv.x) * 0.7);
+          }
+          gl_FragColor = vec4(col, t.a * uOpacity);
           #include <colorspace_fragment>
         }`,
     });

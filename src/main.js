@@ -212,7 +212,8 @@ function drawnUnderHero() {
   const m = onBridge ? cards.bridge.mesh : cards.tower.mesh;
   _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
   const culled = m.frustumCulled && !_fr.intersectsObject(m);
-  return { what: onBridge ? 'bridge' : 'stairs', drawn: m.visible && m.count > 0 && !culled };
+  const shown = m.isInstancedMesh ? m.count > 0 : (m.material.uniforms?.uReveal?.value ?? 1) > 0.95;
+  return { what: onBridge ? 'bridge' : 'stairs', drawn: m.visible && shown && !culled };
 }
 function makeBlob() {
   const c = document.createElement('canvas'); c.width = c.height = 64;

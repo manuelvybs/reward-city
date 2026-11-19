@@ -1,6 +1,6 @@
 # Reward City
 
-Play games, earn coins, unlock gift cards. The VYBS astronaut walks through a grey watercolour city with his phone: play at the VYBS kiosks to fill the coin meter, beam coins at the eight locked gift cards, and every card you unlock paints its street back into colour. Open the giant gift box at the end and the whole city comes alive.
+Play games, earn coins, unlock gift cards. The VYBS astronaut walks through a grey watercolour city with his phone: play at the VYBS kiosks to fill the coin meter, walk up to each of the eight locked gift cards and hold the button: he dances, coins pop out of his phone and fly into the card, and every card you unlock paints its street back into colour. Open the giant gift box at the end and the whole city comes alive.
 
 A browser game in plain JavaScript on Three.js, no build step.
 
@@ -12,7 +12,7 @@ A browser game in plain JavaScript on Three.js, no build step.
 |---|---|---|---|
 | Walk | ← → or A D | | ◀ ▶ pads |
 | Jump | Space, ↑ or W | | JUMP |
-| Beam coins | hold J, Shift or X | hold the left button | hold BEAM |
+| Redeem coins at a gift card (he dances) | hold J, Shift or X | hold the left button | hold REDEEM |
 | Play at a kiosk | stand still at it | | stand still at it |
 | Start · restart · sound | Enter · R · M | click | tap |
 

@@ -113,6 +113,7 @@ function handle(e) {
   if (e.type === 'deny') { hud.pulseMissing(game); hud.hint('the gift box opens with all 8 cards', 2.5); }
   if (e.type === 'empty') hud.hint('out of coins · stand at a VYBS kiosk to play and earn more', 3);
   if (e.type === 'play') hud.hint('playing on VYBS · earning coins', 1.8);
+  if (e.type === 'notarget') hud.hint('walk up to a gift card to redeem your coins', 2.2);
   if (e.type === 'end') { state = 'end'; hud.end(); }
   if (e.type === 'respawn') { const f = document.getElementById('flash'); f.classList.add('on'); requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('on'))); sound.play('land', 0.5, 0.8); }
 }

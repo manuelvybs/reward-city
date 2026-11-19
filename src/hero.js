@@ -16,7 +16,7 @@ const ONCE = new Set(['jump', 'land', 'cheer']);
 const POSES = {
   carry: { pos: [0.030, 0.555, 0.215], top: [0, 1.00, 0.15], normal: [0.72, 0.15, -0.68] },
   play:  { pos: [0.025, 0.615, 0.245], top: [0, 0.85, 0.53], normal: [0.55, 0.45, -0.70] },
-  beam:  { pos: [0.020, 0.585, 0.240], top: [0, 0.80, 0.60], normal: [0.78, 0.40, -0.48] },
+  beam:  { pos: [0.030, 0.640, 0.230], top: [0, 0.94, 0.34], normal: [0.78, 0.25, -0.58] },   // redeem: raised, top up, coins pop out of it
 };
 for (const p of Object.values(POSES)) { p.v = new THREE.Vector3(...p.pos); p.t = new THREE.Vector3(...p.top); p.n = new THREE.Vector3(...p.normal); }
 const GRIP_X = PHONE.w / 2 - 0.006, GRIP_Y = -0.075, GRIP_Y_NEAR = 0.0;
@@ -49,6 +49,10 @@ class Hero {
       if (ONCE.has(c.name)) { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; }
       this.actions[c.name] = a;
     }
+    // the dance while redeeming = the cheer clip on a loop (arms are taken over by the phone IK)
+    const cheer = gltf.animations.find(c => c.name === 'cheer');
+    if (cheer) { const d = cheer.clone(); d.name = 'dance'; this.actions.dance = this.mixer.clipAction(d); }
+    this.t = 0;
     this.b = {};
     for (const [k, n] of Object.entries(HERO.bones)) this.b[k] = model.getObjectByName(n);
     this.ikBones = ['lArm', 'lFore', 'lHand', 'rArm', 'rFore', 'rHand', 'head', 'neck'].map(k => this.b[k]).filter(Boolean);
@@ -82,7 +86,9 @@ class Hero {
     if (this.saved) { for (const [bone, q] of this.saved) bone.quaternion.copy(q); this.saved = null; }
 
     let anim = 'idle', speed = 1;
-    if (s.cheer) anim = 'cheer';
+    this.t += dt;
+    if (s.beam && s.onGround && this.actions.dance) { anim = 'dance'; speed = 1.15; }
+    else if (s.cheer) anim = 'cheer';
     else if (!s.onGround) anim = s.vy > 0.5 ? 'jump' : 'fall';
     else if (Math.abs(s.vx) > 0.15) { anim = 'walk'; speed = Math.abs(s.vx) / 1.6; }
     this.play(anim, anim === 'jump' ? 1.6 : speed, anim === 'jump' ? 0.08 : 0.2);
@@ -94,8 +100,10 @@ class Hero {
     this.side += (-s.facing - this.side) * (1 - Math.exp(-10 * dt));
     const targetYaw = s.facing * (Math.PI / 2 - HERO.camTurn);
     this.yaw += (targetYaw - this.yaw) * (1 - Math.exp(-12 * dt));
-    this.root.position.set(s.x, s.y, 0);
-    this.root.quaternion.setFromAxisAngle(UP, this.yaw);
+    // a little hop and hip sway on top of the dance
+    const db = this.w.beam;
+    this.root.position.set(s.x, s.y + Math.abs(Math.sin(this.t * 7.5)) * 0.05 * db, 0);
+    this.root.quaternion.setFromAxisAngle(UP, this.yaw + Math.sin(this.t * 3.75) * 0.2 * db);
     this.root.updateMatrixWorld(true);
 
     this.saved = this.ikBones.map(bone => [bone, bone.quaternion.clone()]);

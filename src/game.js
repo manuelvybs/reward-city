@@ -59,18 +59,22 @@ export class Game {
       if (this.meter.full) this.emit({ type: 'full', k: k.i });
     }
 
-    this.beaming = !!input.beam && !frozen && !this.playing;
-    p.update(dt, { left: input.left, right: input.right, jump: input.jump, beam: this.beaming, frozen }, pieces);
+    // redeem (hold the button): stand still and dance, coins pop out of the phone and fly to the nearest locked
+    // card (or the gift box) within reach; with nothing in reach he still dances but spends nothing
+    this.beaming = !!input.beam && !frozen && !this.playing && p.onGround;
+    const target = this.beaming ? this.redeemTarget() : null;
+    this.target = target;
+    p.update(dt, { left: input.left && !this.beaming, right: input.right && !this.beaming, jump: input.jump && !this.beaming, beam: this.beaming, frozen }, pieces);
+    if (target) p.facing = Math.sign(target.x - p.x) || p.facing;
     if (p.jumped) this.emit({ type: 'jump' });
     if (p.landed) this.emit({ type: 'land' });
 
-    // coins out of the phone
-    if (this.beaming) {
+    if (this.beaming && target) {
       const n = this.meter.beam(dt);
-      const s = spout || { x: p.x + p.facing * HALF_W, y: p.y + 0.87, z: 0.1 };
-      for (let i = 0; i < n; i++) this.coins.push(launch(s, p.facing, this.rnd));
+      const s = spout || { x: p.x + p.facing * 0.12, y: p.y + 1.05, z: 0.1 };
+      for (let i = 0; i < n; i++) this.coins.push(launch(s, p.facing, this.rnd, target.point(this.rnd)));
       if (this.meter.empty && this.time - this.emptyAt > 1.5) { this.emptyAt = this.time; this.emit({ type: 'empty' }); }
-    }
+    } else if (this.beaming && this.time - (this.noTargetAt ?? -99) > 2.5) { this.noTargetAt = this.time; this.emit({ type: 'notarget' }); }
     this.stepCoins(dt, pieces);
 
     for (const c of this.cards) if (c.state === 'opening' && (c.t += dt) >= OPEN_TIME) c.state = 'open';
@@ -91,7 +95,7 @@ export class Game {
     const all = this.openCount === this.cards.length;
     for (let i = this.coins.length - 1; i >= 0; i--) {
       const c = this.coins[i];
-      stepCoin(c, dt, groundBelow(c.x, c.y + 0.2, pieces) ?? -10);
+      stepCoin(c, dt);
       for (const card of this.cards) {
         if (card.state !== 'locked') continue;
         if (hitsBox(c, { x0: card.x - CARD.hw, x1: card.x + CARD.hw, y0: card.y + CARD.y0, y1: card.y + CARD.y1 })) {
@@ -109,7 +113,7 @@ export class Game {
           if (++b.hits >= b.need) { b.state = 'opening'; this.finaleT = 0; this.emit({ type: 'finale' }); }
         }
       }
-      if (coinDone(c) || c.y < -6) this.coins.splice(i, 1);
+      if (coinDone(c)) this.coins.splice(i, 1);
     }
   }
 
@@ -128,6 +132,25 @@ export class Game {
   }
 
   setCheckpoint(x, y) { this.checkpoint = { x, y }; }
+
+  // the nearest locked card within reach (either side), else the gift box; point(rnd) = a spot on its face
+  redeemTarget() {
+    const p = this.player;
+    let best = null, bd = Infinity;
+    for (const c of this.cards) {
+      if (c.state !== 'locked') continue;
+      const d = Math.abs(c.x - p.x);
+      if (d < BEAM.reach && Math.abs(c.y - p.y) < 3 && d < bd) { bd = d; best = c; }
+    }
+    if (best) {
+      const c = best, cy = c.y + (CARD.y0 + CARD.y1) / 2;
+      return { kind: 'card', x: c.x, y: cy, point: (r) => ({ x: c.x + (r() - 0.5) * 0.6, y: cy + (r() - 0.5) * 0.3 }) };
+    }
+    const b = this.box;
+    if (b.state === 'locked' && Math.abs(b.x - p.x) < BEAM.reach + 1.5 && Math.abs(b.y - p.y) < 3)
+      return { kind: 'box', x: b.x, y: b.y + 1.3, point: (r) => ({ x: b.x + (r() - 0.5) * 1.6, y: b.y + 1.3 + (r() - 0.5) * 1.2 }) };
+    return null;
+  }
 
   // how much colour has come back at x (0 grey .. 1 full colour)
   colourAt(x) {

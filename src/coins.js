@@ -18,14 +18,14 @@ export class CoinRenderer {
     this.max = max;
   }
 
-  // coins: array from coinsim (x, y, z, spin, age, landed, landedAt)
+  // coins: array from coinsim (x, y, z, spin, age); they fade out at the end of their short life
   draw(coins) {
     let n = 0;
     for (const c of coins) {
       if (n >= this.max) break;
-      const fade = c.landed ? Math.max(0, 1 - (c.age - c.landedAt - (BEAM.life - 0.3)) / 0.3) : 1;
+      const fade = Math.max(0, Math.min(1, (BEAM.life - c.age) / 0.25));
       const grow = Math.min(1, c.age / 0.08);
-      E.set(c.landed ? Math.PI / 2 : 0.3, c.landed ? 0 : c.age * c.spin, 0);
+      E.set(0.3, c.age * c.spin, 0);
       Q.setFromEuler(E);
       M.compose(P.set(c.x, c.y, c.z), Q, S.setScalar(Math.min(fade, 1) * grow));
       this.mesh.setMatrixAt(n++, M);

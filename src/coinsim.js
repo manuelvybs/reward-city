@@ -19,26 +19,32 @@ export class Meter {
   refill(dt) { this.value = Math.min(100, this.value + BEAM.refill * dt); }
 }
 
-// a coin leaving the phone at `spout`, thrown forward in the facing direction (+1 right, -1 left).
-// rnd() in [0,1) picks the jitter; 0.5 gives the centre of every range.
-export function launch(spout, facing, rnd = Math.random) {
-  const ang = (BEAM.angle + (rnd() * 2 - 1) * BEAM.angleJitter) * DEG;
-  const spd = BEAM.speed + (rnd() * 2 - 1) * BEAM.speedJitter;
+// Coins pop UP out of the phone screen like a little fountain, then curve over and fly into their target (a point
+// on the gift card). They never fall to the floor: a coin that reaches nothing just fades out in the air.
+// rnd() in [0,1) picks the spread. target = { x, y } (world) or null.
+const RISE = 0.22;                         // seconds of free fountain before the homing ramps in
+export function launch(spout, facing, rnd = Math.random, target = null) {
+  const dir = target ? (Math.sign(target.x - spout.x) || facing) : facing;
   return {
     x: spout.x, y: spout.y, z: (spout.z || 0) + (rnd() - 0.5) * 0.12,
-    vx: facing * Math.cos(ang) * spd, vy: Math.sin(ang) * spd,
-    spin: (rnd() * 2 - 1) * 14, age: 0, landedAt: 0,
-    hit: false, landed: false,
+    vx: dir * (0.3 + rnd() * 0.9) + (rnd() - 0.5) * 0.6, vy: BEAM.popUp + rnd() * 1.2,
+    spin: (rnd() * 2 - 1) * 14, age: 0, hit: false,
+    target: target ? { x: target.x, y: target.y } : null,
   };
 }
 
-export function stepCoin(c, dt, groundY = 0) {
+export function stepCoin(c, dt) {
   c.age += dt;
-  if (c.landed) return;
-  c.vy -= BEAM.gravity * dt;
+  const k = c.target ? Math.min(1, Math.max(0, (c.age - RISE * 0.5) / RISE)) : 0;
+  if (k > 0) {
+    const dx = c.target.x - c.x, dy = c.target.y - c.y, d = Math.hypot(dx, dy) || 1e-6;
+    const speed = 4 + 9 * k + d * 1.5;                       // faster the further it has to go
+    const steer = 1 - Math.exp(-14 * k * dt);
+    c.vx += (dx / d * speed - c.vx) * steer;
+    c.vy += (dy / d * speed - c.vy) * steer;
+  } else c.vy -= 3 * dt;                                     // the fountain slows as it rises
   c.x += c.vx * dt;
   c.y += c.vy * dt;
-  if (c.y <= groundY + BEAM.radius) { c.y = groundY + BEAM.radius; c.landed = true; c.landedAt = c.age; }
 }
 
 // box = { x0, x1, y0, y1 }; true the first time the coin is inside it
@@ -49,5 +55,5 @@ export function hitsBox(c, box) {
   return true;
 }
 
-// a coin is finished once it hit something, or lay on the ground for its life
-export const coinDone = (c) => c.hit || (c.landed && c.age - c.landedAt > BEAM.life);
+// a coin is finished once it hit something, or after its short life in the air
+export const coinDone = (c) => c.hit || c.age > BEAM.life;

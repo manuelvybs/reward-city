@@ -21,7 +21,7 @@
 <body>
 <div id="ui">
   <button data-k="left">◀ walk</button><button data-k="right">walk ▶</button><button data-k="jump">jump</button>
-  <button data-k="beam">beam coins (hold J)</button><button data-k="play">play (hold K)</button><button id="reset">reset card</button>
+  <button data-k="beam">redeem / dance (hold J)</button><button data-k="play">play (hold K)</button><button id="reset">reset card</button>
 </div>
 <div id="meter"><div id="meterFill"></div></div>
 <div id="info">← → walk · space jump · hold J beam · stand in the kiosk to play</div>
@@ -131,11 +131,11 @@ function step(dt) {
   hero.sync(S, dt);
   if (S.beam) {
     const n = meter.beam(dt);
-    for (let i = 0; i < n; i++) coins.push(launch({ x: hero.spout.x, y: hero.spout.y, z: hero.spout.z }, S.facing));
+    for (let i = 0; i < n; i++) coins.push(launch({ x: hero.spout.x, y: hero.spout.y, z: hero.spout.z }, S.facing, Math.random, popT < 0 ? { x: CX + (Math.random() - 0.5) * 0.6, y: 1.06 + (Math.random() - 0.5) * 0.3 } : null));
   }
   for (let i = coins.length - 1; i >= 0; i--) {
     const c = coins[i];
-    stepCoin(c, dt, 0);
+    stepCoin(c, dt);
     if (popT < 0 && hitsBox(c, cardBox)) { hits++; if (hits >= BEAM.need) { popT = 0; face.material.map = amazon; S.cheerT = 1.8; } }
     if (coinDone(c)) coins.splice(i, 1);
   }

@@ -19,13 +19,27 @@ test('beaming at a card from 2.6 m unlocks it in under 2.5 s', () => {
 });
 
 test('card 3 grows the bridge and card 6 the stairs', () => {
-  const g = new Game({ x: CARD_DEFS[2].x - 2.6, y: 0.9 });
+  const g = new Game({ x: CARD_DEFS[2].x - 2.6, y: 0.9, cards: 2 });          // as in play: the earlier cards are open
   run(g, 2.5, { beam: true });
   assert.equal(g.bridge, true);
   assert.notEqual(groundBelow(48, 2, g.pieces), null);
-  const h = new Game({ x: CARD_DEFS[5].x - 2.6, y: 0.3 });
+  const h = new Game({ x: CARD_DEFS[5].x - 2.6, y: 0.3, cards: 5 });
   run(h, 2.5, { beam: true });
   assert.equal(h.tower, true);
+});
+
+test('redeeming stands still, faces the card, and spends nothing with no card in reach', () => {
+  const c = CARD_DEFS[0];
+  const g = new Game({ x: c.x + 2.6 });                                     // card to the LEFT
+  g.player.facing = 1;
+  run(g, 0.5, { beam: true, right: true });
+  assert.ok(Math.abs(g.player.x - (c.x + 2.6)) < 0.05, `walked to ${g.player.x}`);
+  assert.equal(g.player.facing, -1);
+  const far = new Game({ x: 5 });                                           // 8 m from the first card
+  run(far, 1, { beam: true });
+  assert.equal(far.meter.value, 100);
+  assert.equal(far.coins.length, 0);
+  assert.ok(types(far).includes('notarget'));
 });
 
 test('the gift box refuses coins until all eight cards are open', () => {

@@ -13,13 +13,10 @@ export const BEAM = {
   rate: 30,             // coins per second
   refill: 55,           // meter per second while playing at a kiosk
   need: 38,             // coin hits that unlock a card
-  speed: 5.2,           // coin launch speed, m/s
-  angle: 45,            // launch angle, degrees above the facing direction
-  angleJitter: 8,       // ± degrees
-  speedJitter: 0.25,    // ± m/s
-  gravity: 9.8,
+  popUp: 4.6,           // m/s straight up out of the phone (+ up to 1.2 random)
+  reach: 6,             // a locked card this close (m, either side) receives the coins
   radius: 0.045,        // coin disc radius, metres
-  life: 2.2,            // seconds before a landed coin is gone
+  life: 1.6,            // seconds a coin lives in the air
 };
 
 export const HERO = {

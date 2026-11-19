@@ -36,6 +36,7 @@ export class CardsView {
       g.add(post, backing, face);
       g.position.set(c.x, c.y, -0.15);
       scene.add(g);
+      if (c.state !== 'locked') { face.material.map = tex[c.brand]; backing.material.color.setHex(BRAND_HUES[c.brand]); }   // opened before the view existed
       return { g, face, backing, shake: 0, popped: false };
     });
 

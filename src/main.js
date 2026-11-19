@@ -10,6 +10,7 @@ import { Input } from './input.js';
 import { Paint } from './paint.js';
 import { Fx } from './fx.js';
 import { Sound } from './audio.js';
+import { Post } from './post.js';
 import { CARDS } from './config.js';
 import { groundBelow } from './level.js';
 
@@ -32,7 +33,14 @@ const MIST = new THREE.Color('#dedbd4');
 scene.background = MIST;
 scene.fog = new THREE.Fog(MIST, 22, 70);
 const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 300);
-addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); });
+// keep at least 11 m of street in view at any aspect (portrait phones widen the vertical field of view)
+function fitCamera() {
+  camera.aspect = innerWidth / innerHeight;
+  camera.fov = Math.max(30, 2 * Math.atan(5.5 / 12.5 / camera.aspect) * 180 / Math.PI);
+  camera.updateProjectionMatrix();
+}
+fitCamera();
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); fitCamera(); post?.setSize(innerWidth, innerHeight); });
 
 scene.add(new THREE.HemisphereLight(0xfff8ee, 0x8d8b88, 1.6));
 const sun = new THREE.DirectionalLight(0xfff0dc, 2.0);
@@ -42,11 +50,14 @@ const hud = new Hud();
 const sound = new Sound();
 for (const ev of ['keydown', 'pointerdown']) addEventListener(ev, () => sound.start());   // browsers allow audio after a gesture
 const input = new Input();
+input.bindPads();
+let post = null;
 const loader = new THREE.TextureLoader();
 const [screenTex, cardTex, paint] = await Promise.all([loader.loadAsync('assets/ui/phone-screen.webp'), loadCardTextures(CARDS), Paint.load()]);
 const hero = await loadHero(screenTex);
 scene.add(hero.root);
 const blob = makeBlob(); scene.add(blob);
+post = new Post(renderer, scene, camera, Q); post.setSize(innerWidth, innerHeight);
 
 let game = new Game({ x: FLAGS.x, cards: FLAGS.cards });
 if (FLAGS.colour) game.finaleT = 8.5;
@@ -103,6 +114,7 @@ function handle(e) {
   if (e.type === 'empty') hud.hint('out of coins · stand at a VYBS kiosk to play and earn more', 3);
   if (e.type === 'play') hud.hint('playing on VYBS · earning coins', 1.8);
   if (e.type === 'end') { state = 'end'; hud.end(); }
+  if (e.type === 'respawn') { const f = document.getElementById('flash'); f.classList.add('on'); requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('on'))); sound.play('land', 0.5, 0.8); }
 }
 
 let acc = 0, last = performance.now();
@@ -171,12 +183,15 @@ function frame(now) {
   cards.update(game, dt * FLAGS.speed);
   coins.draw(game.coins);
   hud.update(game);
-  renderer.render(scene, camera);
+  post.watch(dt, state === 'play');
+  post.render();
   input.endFrame();
   requestAnimationFrame(frame);
 }
 hud.ready();
 requestAnimationFrame(frame);
+// pause the sound with the tab (the frame loop already stops in the background)
+document.addEventListener('visibilitychange', () => { if (!sound.ctx) return; if (document.hidden) sound.ctx.suspend(); else sound.ctx.resume(); });
 
 window.__game = {
   ready: true,

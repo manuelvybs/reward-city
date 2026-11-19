@@ -8,3 +8,4 @@ tools/playtest/
 art-src/**/*.mp4
 tools/playtest-video/
 art-src/**/*.jpg
+tools/playtest-phone/

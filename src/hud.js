@@ -17,7 +17,10 @@ export class Hud {
   }
 
   ready() { $('loading').style.display = 'none'; $('press').style.display = ''; }
-  start() { $('title').classList.add('hidden'); $('hud').classList.add('on'); this.hint('hold J or Shift to beam coins at the gift card', 6); }
+  start() {
+    $('title').classList.add('hidden'); $('hud').classList.add('on');
+    this.hint(document.body.classList.contains('touch') ? 'hold BEAM to throw coins at the gift card' : 'hold J or Shift to beam coins at the gift card', 6);
+  }
   end() { $('end').classList.add('on'); $('hud').classList.remove('on'); }
   restart() { $('end').classList.remove('on'); $('hud').classList.add('on'); }
 

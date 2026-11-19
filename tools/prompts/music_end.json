@@ -1,0 +1,6 @@
+{
+  "prompt": "A joyful celebratory ending for a cute game: the gentle piano theme bursts into full colour with bright strings, glockenspiel, claps and a warm brass swell, triumphant and happy, resolving on a big final chord. Instrumental only, no vocals.",
+  "music_length_ms": 30000,
+  "force_instrumental": true,
+  "output_format": "mp3_44100_128"
+}

@@ -9,6 +9,7 @@ import { Hud } from './hud.js';
 import { Input } from './input.js';
 import { Paint } from './paint.js';
 import { Fx } from './fx.js';
+import { Sound } from './audio.js';
 import { CARDS } from './config.js';
 import { groundBelow } from './level.js';
 
@@ -38,6 +39,8 @@ const sun = new THREE.DirectionalLight(0xfff0dc, 2.0);
 scene.add(sun, sun.target);
 
 const hud = new Hud();
+const sound = new Sound();
+for (const ev of ['keydown', 'pointerdown']) addEventListener(ev, () => sound.start());   // browsers allow audio after a gesture
 const input = new Input();
 const loader = new THREE.TextureLoader();
 const [screenTex, cardTex, paint] = await Promise.all([loader.loadAsync('assets/ui/phone-screen.webp'), loadCardTextures(CARDS), Paint.load()]);
@@ -61,21 +64,31 @@ seedField();
 let state = 'title';
 const cam = { x: game.player.x, y: 2, look: 1, push: 0, pull: 0 };
 const glints = new Map();
+const sfx = { coinAt: -1, stepDist: 0 };
 const v = new THREE.Vector3();
 
-function start() { state = 'play'; hud.start(); }
+function start() { state = 'play'; hud.start(); sound.start(); sound.music('music_city', 0.85); }
 function restart() {
   for (const c of cards.cards) scene.remove(c.g);
   scene.remove(cards.bridge.mesh, cards.tower.mesh, cards.box.g);
   game = new Game({ x: FLAGS.x, cards: FLAGS.cards });
   cards = new CardsView(scene, game, cardTex, paint);
   paint.field.reset(); fx.reset(); seedField();
-  hud.syncSlots(game); hud.restart(); state = 'play';
+  hud.syncSlots(game); hud.restart(); state = 'play'; sound.music('music_city', 0.85);
 }
 
 function handle(e) {
   cards.onEvent(e, game);
   if (e.type === 'hit' && e.i !== 'box') fx.sparkAt(e.x, e.y);
+  if (e.type === 'hit' && game.time - sfx.coinAt > 0.055) { sfx.coinAt = game.time; sound.play('coin', 0.32, 0.9 + Math.random() * 0.35); }
+  if (e.type === 'jump') sound.play('jump', 0.7, 0.95 + Math.random() * 0.1);
+  if (e.type === 'land') sound.play('land', 0.55);
+  if (e.type === 'play') sound.play('kiosk', 0.8);
+  if (e.type === 'full') sound.play('full', 0.8);
+  if (e.type === 'deny') sound.play('deny', 0.9);
+  if (e.type === 'empty') sound.play('empty', 0.7);
+  if (e.type === 'unlock') { sound.play('unlock', 1); setTimeout(() => sound.play('wash', 0.7), 300); }
+  if (e.type === 'finale') { sound.play('finale', 1); sound.play('wash', 0.8); sound.music('music_end', 1, 1.2); }
   if (e.type === 'unlock') {
     const c = game.cards[e.i];
     paint.field.splash(c.x, c.y, game.time);
@@ -99,6 +112,7 @@ function frame(now) {
   if (state === 'title' && (inp.start || FLAGS.autostart)) start();
   else if (state === 'end' && inp.start) state = 'play';                    // wander on after the end card
   if (inp.restart && state !== 'title') restart();
+  if (input.took('KeyM')) sound.mute();
 
   if (state !== 'title') {
     acc += dt * FLAGS.speed;
@@ -142,6 +156,15 @@ function frame(now) {
       else glints.set(c.i, t);
     }
   }
+  // sound beds follow the state: beam and kiosk loops, footsteps, the city waking up as colour comes back
+  if (state !== 'title') {
+    if (p.onGround && Math.abs(p.vx) > 0.3) { sfx.stepDist += Math.abs(p.vx) * sdt; if (sfx.stepDist > 0.55) { sfx.stepDist = 0; sound.play('step', 0.3, 0.9 + Math.random() * 0.2); } }
+    sound.loop('beam', game.beaming && !game.meter.empty ? 0.5 : 0);
+    sound.loop('play', game.playing ? 0.45 : 0);
+    const c = Math.max(game.colourAt(cam.x), paint.shared.uGlobal.value);
+    sound.loop('city_grey', 0.5 * (1 - c));
+    sound.loop('city_colour', 0.45 * c);
+  }
   paint.update(game.time);
   fx.update(sdt);
   world.update(game, cam.x, now / 1000);
@@ -157,7 +180,7 @@ requestAnimationFrame(frame);
 
 window.__game = {
   ready: true,
-  get game() { return game; }, get state() { return state; }, hero, camera,
+  get game() { return game; }, get state() { return state; }, hero, camera, sound,
   summary() { const p = game.player; return { x: +p.x.toFixed(2), y: +p.y.toFixed(2), meter: Math.round(game.meter.value), open: game.openCount, finale: game.finaleT >= 0, ended: game.ended, state }; },
 };
 

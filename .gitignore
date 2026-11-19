@@ -5,3 +5,4 @@ node_modules
 art-src/**/*.raw.*
 art-src/**/*.png
 tools/playtest/
+art-src/**/*.mp4

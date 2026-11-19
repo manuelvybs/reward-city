@@ -13,12 +13,12 @@ export const BEAM = {
   rate: 30,             // coins per second
   refill: 55,           // meter per second while playing at a kiosk
   need: 38,             // coin hits that unlock a card
-  speed: 4.2,           // coin launch speed, m/s
-  angle: 40,            // launch angle, degrees above the facing direction
+  speed: 5.2,           // coin launch speed, m/s
+  angle: 45,            // launch angle, degrees above the facing direction
   angleJitter: 8,       // ± degrees
   speedJitter: 0.25,    // ± m/s
   gravity: 9.8,
-  radius: 0.055,        // coin disc radius, metres
+  radius: 0.045,        // coin disc radius, metres
   life: 2.2,            // seconds before a landed coin is gone
 };
 

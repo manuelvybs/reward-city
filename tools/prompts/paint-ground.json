@@ -1,0 +1,10 @@
+{
+  "prompt": "Use exactly the art style of the reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture, soft and hand-made. A seamless horizontal strip texture for the front face of the street in a side-scrolling game, filling the whole image edge to edge: along the very top a row of worn kerb stones and cracked paving seen straight from the front, below it layers of packed earth, broken bricks, pipes and rubble getting darker towards the bottom. Warm stone colours with lavender and indigo shadows. It must tile left to right with no visible seam. No text.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png"
+  ],
+  "aspect_ratio": "21:9",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 1
+}

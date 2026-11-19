@@ -7,7 +7,9 @@ import { World } from './world.js';
 import { CardsView, loadCardTextures } from './cards.js';
 import { Hud } from './hud.js';
 import { Input } from './input.js';
+import { Paint } from './paint.js';
 import { CARDS } from './config.js';
+import { groundBelow } from './level.js';
 
 const Q = new URLSearchParams(location.search);
 const FLAGS = {
@@ -21,8 +23,6 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'hi
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.prepend(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -34,22 +34,20 @@ addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); ca
 
 scene.add(new THREE.HemisphereLight(0xfff8ee, 0x8d8b88, 1.6));
 const sun = new THREE.DirectionalLight(0xfff0dc, 2.0);
-sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 10, bottom: -6, near: 1, far: 60 });
-sun.shadow.bias = -0.0005;
 scene.add(sun, sun.target);
 
 const hud = new Hud();
 const input = new Input();
 const loader = new THREE.TextureLoader();
-const [screenTex, cardTex] = await Promise.all([loader.loadAsync('assets/ui/phone-screen.webp'), loadCardTextures(CARDS)]);
+const [screenTex, cardTex, paint] = await Promise.all([loader.loadAsync('assets/ui/phone-screen.webp'), loadCardTextures(CARDS), Paint.load()]);
 const hero = await loadHero(screenTex);
 scene.add(hero.root);
+const blob = makeBlob(); scene.add(blob);
 
 let game = new Game({ x: FLAGS.x, cards: FLAGS.cards });
 if (FLAGS.colour) game.finaleT = 8.5;
-const world = new World(scene);
-let cards = new CardsView(scene, game, cardTex);
+const world = new World(scene, paint);
+let cards = new CardsView(scene, game, cardTex, paint);
 const coins = new CoinRenderer(); scene.add(coins.mesh);
 hud.syncSlots(game);
 
@@ -62,7 +60,7 @@ function restart() {
   for (const c of cards.cards) scene.remove(c.g);
   scene.remove(cards.bridge.mesh, cards.tower.mesh, cards.box.g);
   game = new Game({ x: FLAGS.x, cards: FLAGS.cards });
-  cards = new CardsView(scene, game, cardTex);
+  cards = new CardsView(scene, game, cardTex, paint);
   hud.syncSlots(game); hud.restart(); state = 'play';
 }
 
@@ -109,6 +107,9 @@ function frame(now) {
   camera.lookAt(cam.x, cam.y - 0.35, 0);
   sun.position.set(cam.x - 6, cam.y + 12, 9); sun.target.position.set(cam.x, cam.y - 2, 0);
 
+  const gy = groundBelowP(p.x, p.y + 0.05);
+  blob.visible = gy !== null;
+  if (gy !== null) { const hgt = p.y - gy; blob.position.set(p.x, gy + 0.015, 0.05); blob.scale.setScalar(Math.max(0.4, 1 - hgt / 3)); blob.material.opacity = 0.32 * Math.max(0, 1 - hgt / 2.5); }
   world.update(game, cam.x, now / 1000);
   cards.update(game, dt * FLAGS.speed);
   coins.draw(game.coins);
@@ -125,3 +126,14 @@ window.__game = {
   get game() { return game; }, get state() { return state; }, hero, camera,
   summary() { const p = game.player; return { x: +p.x.toFixed(2), y: +p.y.toFixed(2), meter: Math.round(game.meter.value), open: game.openCount, finale: game.finaleT >= 0, ended: game.ended, state }; },
 };
+
+function groundBelowP(x, y) { return groundBelow(x, y, game.pieces); }
+function makeBlob() {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'), r = g.createRadialGradient(32, 32, 2, 32, 32, 32);
+  r.addColorStop(0, 'rgba(40,36,60,1)'); r.addColorStop(1, 'rgba(40,36,60,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.42), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2;
+  return m;
+}

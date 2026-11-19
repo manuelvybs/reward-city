@@ -1,0 +1,10 @@
+{
+  "prompt": "Use exactly the art style of the reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture, soft and hand-made. Four separate street-level buildings of a crumbling modern town, each two storeys at most: 1) a corner shop with a pulled-down metal roller shutter and a torn awning, 2) an old arcade hall with a big empty marquee sign frame ringed with unlit bulbs, 3) a shop with a striped awning and a small flat above with glowing windows, 4) a little laundromat with a round empty sign frame. A few cracks and missing bricks. Painted in their full lit colours: walls in deep indigo, periwinkle blue and lavender washes, cream trims, warm golden light glowing in the windows. Each one is drawn as a flat front elevation, seen straight on with no perspective, like a layer of a 2D side-scrolling game background, all standing on the same baseline along the bottom, spaced out with wide clear white gaps between them so they never touch or overlap.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png"
+  ],
+  "aspect_ratio": "16:9",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 1
+}

@@ -22,20 +22,18 @@ export async function loadCardTextures(brands) {
 }
 
 export class CardsView {
-  constructor(scene, game, tex) {
-    this.scene = scene; this.tex = tex;
+  constructor(scene, game, tex, paint) {
+    this.scene = scene; this.tex = tex; this.paint = paint;
     this.lockTex = lockTexture();
     this.cards = game.cards.map(c => {
       const g = new THREE.Group();
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, CARD.post, 10), new THREE.MeshStandardMaterial({ color: 0x7d7a74, roughness: 0.8 }));
-      post.position.y = CARD.post / 2; post.castShadow = true;
-      const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 0.08, 14), post.material);
-      foot.position.y = 0.04;
+      // the painted stand's post and base (its own portrait frame is cropped off: the card sits on top)
+      const post = paint.sprite('stand', { x: 0, y: -0.02, z: -0.03, uv: [0, 0, 1, 0.64], h: 0.95 });
       const face = new THREE.Mesh(new THREE.PlaneGeometry(CARD.w, CARD.h), new THREE.MeshBasicMaterial({ map: this.lockTex, transparent: true, color: 0xffffff }));
       face.position.y = (CARD.y0 + CARD.y1) / 2;
       const backing = new THREE.Mesh(new THREE.BoxGeometry(CARD.w * 0.98, CARD.h * 0.98, 0.03), new THREE.MeshStandardMaterial({ color: 0x9a978f }));
       backing.position.set(0, face.position.y, -0.02); backing.castShadow = true;
-      g.add(post, foot, backing, face);
+      g.add(post, backing, face);
       g.position.set(c.x, c.y, -0.15);
       scene.add(g);
       return { g, face, backing, shake: 0, popped: false };
@@ -64,25 +62,15 @@ export class CardsView {
     this.tower.mesh.count = 0;
     scene.add(this.tower.mesh);
 
-    // gift box
+    // gift box: painted, closed until the finale, then the opened painting with its lid off
+    const closed = paint.sprite('box-closed', { x: 0, y: -0.05, z: 0, h: 3.2 });
+    const open = paint.sprite('box-open', { x: 1.7, y: -0.05, z: 0, h: 3.4, force: 1 });
+    open.visible = false;
     const box = new THREE.Group();
-    const grey = new THREE.MeshStandardMaterial({ color: 0x9d9a94, roughness: 0.7 });
-    const ribbonMat = new THREE.MeshStandardMaterial({ color: 0x7f7c77, roughness: 0.5 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(BOX.hw * 2 - 0.2, BOX.h * 0.78, 2.0), grey);
-    body.position.y = BOX.h * 0.39; body.castShadow = true;
-    const lid = new THREE.Group();
-    const lidBox = new THREE.Mesh(new THREE.BoxGeometry(BOX.hw * 2, BOX.h * 0.16, 2.2), grey);
-    lidBox.castShadow = true;
-    const bow1 = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.09, 8, 20), ribbonMat); bow1.position.set(-0.3, 0.3, 0); bow1.rotation.z = 0.5;
-    const bow2 = bow1.clone(); bow2.position.x = 0.3; bow2.rotation.z = -0.5;
-    lid.add(lidBox, bow1, bow2);
-    lid.position.y = BOX.h * 0.86;
-    const rv = new THREE.Mesh(new THREE.BoxGeometry(0.28, BOX.h * 0.79, 2.04), ribbonMat); rv.position.y = BOX.h * 0.39;
-    const rh = new THREE.Mesh(new THREE.BoxGeometry(BOX.hw * 2 - 0.16, 0.28, 2.04), ribbonMat); rh.position.y = BOX.h * 0.45;
-    box.add(body, rv, rh, lid);
+    box.add(closed, open);
     box.position.set(BOX.x, BOX.y, -0.4);
     scene.add(box);
-    this.box = { g: box, lid, grey, ribbonMat, shake: 0, t: -1 };
+    this.box = { g: box, closed, open, shake: 0, t: -1 };
   }
 
   onEvent(e, game) {
@@ -141,20 +129,19 @@ export class CardsView {
       });
       tw.mesh.instanceMatrix.needsUpdate = true;
     }
-    // gift box: shakes when refused; bursts open for the finale
+    // gift box: shakes when refused, glows toward colour once every card is in, swaps to the opened painting
     const bx = this.box, gb = game.box;
     bx.shake = Math.max(0, bx.shake - dt);
     bx.g.position.x = BOX.x + Math.sin(game.time * 60) * bx.shake * 0.08;
     const ready = game.openCount === game.cards.length;
     if (gb.state === 'locked') {
-      const pulse = ready ? 0.5 + 0.5 * Math.sin(game.time * 4) : 0;
-      bx.ribbonMat.color.setRGB(0.5 + pulse * 0.5, 0.49 + pulse * 0.34, 0.47 - pulse * 0.3);
-      bx.grey.color.setHex(0x9d9a94).lerp(new THREE.Color(0x5B69FE), Math.min(0.6, gb.hits / gb.need));
+      const u = bx.closed.material.uniforms.uForce;
+      u.value = ready ? Math.max(gb.hits / gb.need, 0.35 + 0.25 * Math.sin(game.time * 4)) : 0;
+      bx.closed.scale.setScalar(1 + (ready ? 0.015 * Math.sin(game.time * 8) : 0));
     } else {
       bx.t = bx.t < 0 ? 0 : bx.t + dt;
-      bx.lid.position.y = BOX.h * 0.86 + easeOut(bx.t / 1.2) * 3.5;
-      bx.lid.rotation.z = easeOut(bx.t / 1.2) * 0.9;
-      bx.grey.color.setHex(0x5B69FE); bx.ribbonMat.color.setHex(0xFFD401);
+      bx.closed.visible = false; bx.open.visible = true;
+      bx.open.scale.setScalar(1 + Math.sin(clamp(bx.t / 0.6, 0, 1) * Math.PI) * 0.12);
     }
   }
 }

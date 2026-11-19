@@ -1,0 +1,10 @@
+{
+  "prompt": "Use exactly the art style of the reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture, soft and hand-made. A friendly street game kiosk for a mobile rewards app: an arcade-style booth in deep indigo with rounded corners, a large glowing screen showing colourful cartoon game art, a blank golden sign panel on top, a small speaker grille and a coin tray, warm glow. Seen straight from the front, standing upright, the only object. Isolated on a plain flat pure white background, nothing else in the picture: no ground, no floor line, no cast shadow, no sky, no text, no letters, no numbers, no logos.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png"
+  ],
+  "aspect_ratio": "3:4",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 1
+}

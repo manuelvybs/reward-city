@@ -1,0 +1,10 @@
+{
+  "prompt": "Use exactly the art style of the reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture, soft and hand-made. A set of separate street props for the same town, spaced out in a grid with wide white gaps: a wooden utility pole with two crossbars, a curved street lamp, two different piles of rubble and broken bricks, a fallen rusty steel girder, a broken neon sign frame with no letters, a fire hydrant, a traffic cone, a park bench. Painted in lit colours: indigo, periwinkle, lavender, warm gold and rust, each drawn flat from the side. Isolated on a plain flat pure white background, nothing else in the picture: no ground, no floor line, no cast shadow, no sky, no text, no letters, no numbers, no logos.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png"
+  ],
+  "aspect_ratio": "16:9",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 1
+}

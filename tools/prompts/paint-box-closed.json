@@ -1,0 +1,11 @@
+{
+  "prompt": "Use exactly the art style of the first reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture. Paint the same giant gift box as the second reference image, but CLOSED with its lid on and the big floppy gold bow on top, seen straight from the front as a flat front elevation with no perspective (only the front face visible, the lid's front edge as a band across the top). Deep indigo wrapping paper with a wide gold ribbon crossing the front vertically and horizontally. Isolated on a plain flat pure white background, the only object: no ground, no cast shadow, no text, no letters, no logos.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png",
+    "https://v3b.fal.media/files/b/0ab3138c/iJ_p2Q4bWYRlG1na4vY9g_box.png"
+  ],
+  "aspect_ratio": "1:1",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 1
+}

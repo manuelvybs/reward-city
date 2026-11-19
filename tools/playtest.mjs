@@ -16,7 +16,9 @@ const page = await ctx.newPage();
 const errors = [];
 page.on('console', m => m.type() === 'error' && errors.push(m.text()));
 page.on('pageerror', e => errors.push(String(e)));
-page.on('requestfailed', r => errors.push('request failed: ' + r.url()));
+const failed = new Set(), loaded = new Set();
+page.on('requestfailed', r => failed.add(r.url()));
+page.on('response', r => { if (r.ok()) loaded.add(r.url()); });
 const t0 = Date.now();
 await page.goto(`${base}?autopilot&speed=${speed}`);
 await page.waitForFunction(() => window.__game?.ready, null, { timeout: 30000 });
@@ -31,6 +33,8 @@ while (Date.now() - t0 < limit) {
   await page.waitForTimeout(150);
 }
 await ctx.close(); await browser.close();
+// the local server drops a parallel request now and then; loaders retry, so only never-loaded URLs count
+for (const u of failed) if (!loaded.has(u)) errors.push('request failed: ' + u);
 let mp4 = null;
 if (video) {
   const webm = readdirSync(out).filter(f => f.endsWith('.webm')).map(f => join(out, f)).pop();

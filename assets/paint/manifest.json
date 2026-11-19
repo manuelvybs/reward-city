@@ -1,0 +1,275 @@
+{
+ "near-0": {
+  "file": "near-0.webp",
+  "w": 581,
+  "h": 720,
+  "layer": "near",
+  "metresW": 6.084,
+  "metresH": 7.534
+ },
+ "near-1": {
+  "file": "near-1.webp",
+  "w": 530,
+  "h": 720,
+  "layer": "near",
+  "metresW": 5.497,
+  "metresH": 7.475
+ },
+ "near-2": {
+  "file": "near-2.webp",
+  "w": 475,
+  "h": 720,
+  "layer": "near",
+  "metresW": 4.693,
+  "metresH": 7.115
+ },
+ "near-3": {
+  "file": "near-3.webp",
+  "w": 472,
+  "h": 720,
+  "layer": "near",
+  "metresW": 4.726,
+  "metresH": 7.207
+ },
+ "mid-0": {
+  "file": "mid-0.webp",
+  "w": 248,
+  "h": 640,
+  "layer": "mid",
+  "metresW": 5.688,
+  "metresH": 14.661
+ },
+ "mid-1": {
+  "file": "mid-1.webp",
+  "w": 311,
+  "h": 640,
+  "layer": "mid",
+  "metresW": 7.146,
+  "metresH": 14.705
+ },
+ "mid-2": {
+  "file": "mid-2.webp",
+  "w": 302,
+  "h": 640,
+  "layer": "mid",
+  "metresW": 7.102,
+  "metresH": 15.059
+ },
+ "mid-3": {
+  "file": "mid-3.webp",
+  "w": 355,
+  "h": 640,
+  "layer": "mid",
+  "metresW": 7.382,
+  "metresH": 13.32
+ },
+ "mid-4": {
+  "file": "mid-4.webp",
+  "w": 302,
+  "h": 640,
+  "layer": "mid",
+  "metresW": 7.058,
+  "metresH": 14.971
+ },
+ "far-0": {
+  "file": "far-0.webp",
+  "w": 164,
+  "h": 560,
+  "layer": "far",
+  "metresW": 6.622,
+  "metresH": 22.622
+ },
+ "far-1": {
+  "file": "far-1.webp",
+  "w": 361,
+  "h": 560,
+  "layer": "far",
+  "metresW": 12.216,
+  "metresH": 18.973
+ },
+ "far-2": {
+  "file": "far-2.webp",
+  "w": 153,
+  "h": 560,
+  "layer": "far",
+  "metresW": 6.432,
+  "metresH": 23.514
+ },
+ "far-3": {
+  "file": "far-3.webp",
+  "w": 171,
+  "h": 560,
+  "layer": "far",
+  "metresW": 7.973,
+  "metresH": 26.108
+ },
+ "far-4": {
+  "file": "far-4.webp",
+  "w": 176,
+  "h": 560,
+  "layer": "far",
+  "metresW": 7.919,
+  "metresH": 25.216
+ },
+ "far-5": {
+  "file": "far-5.webp",
+  "w": 230,
+  "h": 560,
+  "layer": "far",
+  "metresW": 9.865,
+  "metresH": 24.027
+ },
+ "kiosk": {
+  "file": "kiosk.webp",
+  "w": 299,
+  "h": 560,
+  "metresH": 1.9,
+  "metresW": 1.014,
+  "main": 1
+ },
+ "stand": {
+  "file": "stand.webp",
+  "w": 129,
+  "h": 420,
+  "metresH": 1.45,
+  "metresW": 0.446,
+  "main": 1
+ },
+ "box-open": {
+  "file": "box-open.webp",
+  "w": 900,
+  "h": 495,
+  "metresH": 3.4,
+  "metresW": 6.186,
+  "main": 1
+ },
+ "box-closed": {
+  "file": "box-closed.webp",
+  "w": 619,
+  "h": 760,
+  "metresH": 3.2,
+  "metresW": 2.608,
+  "main": 1
+ },
+ "ground": {
+  "file": "ground.webp",
+  "w": 1400,
+  "h": 550,
+  "tile": "x"
+ },
+ "wall": {
+  "file": "wall.webp",
+  "w": 1024,
+  "h": 1024,
+  "tile": "xy"
+ },
+ "sky": {
+  "file": "sky.webp",
+  "w": 2048,
+  "h": 869
+ },
+ "nearb-0": {
+  "file": "nearb-0.webp",
+  "w": 561,
+  "h": 720,
+  "layer": "nearb",
+  "metresW": 7.431,
+  "metresH": 9.536
+ },
+ "nearb-1": {
+  "file": "nearb-1.webp",
+  "w": 269,
+  "h": 720,
+  "layer": "nearb",
+  "metresW": 3.506,
+  "metresH": 9.384
+ },
+ "nearb-2": {
+  "file": "nearb-2.webp",
+  "w": 538,
+  "h": 720,
+  "layer": "nearb",
+  "metresW": 7.038,
+  "metresH": 9.411
+ },
+ "nearb-3": {
+  "file": "nearb-3.webp",
+  "w": 409,
+  "h": 469,
+  "layer": "nearb",
+  "metresW": 3.648,
+  "metresH": 4.184
+ },
+ "prop-0": {
+  "file": "prop-0.webp",
+  "w": 178,
+  "h": 420,
+  "layer": "prop",
+  "metresW": 2.332,
+  "metresH": 5.516
+ },
+ "prop-1": {
+  "file": "prop-1.webp",
+  "w": 147,
+  "h": 420,
+  "layer": "prop",
+  "metresW": 1.203,
+  "metresH": 3.436
+ },
+ "prop-2": {
+  "file": "prop-2.webp",
+  "w": 420,
+  "h": 226,
+  "layer": "prop",
+  "metresW": 2.575,
+  "metresH": 1.388
+ },
+ "prop-3": {
+  "file": "prop-3.webp",
+  "w": 420,
+  "h": 204,
+  "layer": "prop",
+  "metresW": 2.398,
+  "metresH": 1.166
+ },
+ "prop-4": {
+  "file": "prop-4.webp",
+  "w": 420,
+  "h": 236,
+  "layer": "prop",
+  "metresW": 2.563,
+  "metresH": 1.442
+ },
+ "prop-5": {
+  "file": "prop-5.webp",
+  "w": 420,
+  "h": 351,
+  "layer": "prop",
+  "metresW": 2.101,
+  "metresH": 1.755
+ },
+ "prop-6": {
+  "file": "prop-6.webp",
+  "w": 223,
+  "h": 419,
+  "layer": "prop",
+  "metresW": 0.919,
+  "metresH": 1.726
+ },
+ "prop-7": {
+  "file": "prop-7.webp",
+  "w": 280,
+  "h": 355,
+  "layer": "prop",
+  "metresW": 1.154,
+  "metresH": 1.463
+ },
+ "prop-8": {
+  "file": "prop-8.webp",
+  "w": 420,
+  "h": 268,
+  "layer": "prop",
+  "metresW": 2.661,
+  "metresH": 1.697
+ }
+}

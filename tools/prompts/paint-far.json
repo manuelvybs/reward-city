@@ -1,0 +1,10 @@
+{
+  "prompt": "Use exactly the art style of the reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture, soft and hand-made. Six separate tall distant city buildings and towers, simple shapes with only a few windows, very pale and hazy light washes of lavender and periwinkle with a thin soft ink line, like buildings far away in the mist. Each one is drawn as a flat front elevation, seen straight on with no perspective, like a layer of a 2D side-scrolling game background, all standing on the same baseline along the bottom, spaced out with wide clear white gaps between them so they never touch or overlap.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png"
+  ],
+  "aspect_ratio": "16:9",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 1
+}

@@ -1,0 +1,10 @@
+{
+  "prompt": "Use exactly the art style of the reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture, soft and hand-made. A soft watercolour sky wash for a game background, filling the whole image edge to edge: deep periwinkle and lavender at the top fading to a warm peach and gold glow near the bottom, a few loose wet-in-wet clouds. No buildings, no ground, no horizon objects, no sun, no birds, no text.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png"
+  ],
+  "aspect_ratio": "21:9",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 1
+}

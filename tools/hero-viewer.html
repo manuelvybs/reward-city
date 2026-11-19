@@ -81,8 +81,10 @@ const cardBox = { x0: CX - 0.5, x1: CX + 0.5, y0: 0.7, y1: 1.4 };
 let hits = +(q.get('hits') || 0), popT = -1;
 
 const screenTex = await new THREE.TextureLoader().loadAsync('../assets/ui/phone-screen.webp');
-const hero = await loadHero(screenTex, '../assets/models/hero.glb');
+const hero = await loadHero(screenTex, q.get('glb') || '../assets/models/hero.glb');
 scene.add(hero.root);
+if (q.has('noik')) hero.ik = false;
+if (q.has('bind')) { hero.animate = false; hero.mixer.stopAllAction(); }
 const coinsR = new CoinRenderer(); scene.add(coinsR.mesh);
 const coins = [];
 const meter = new Meter(+(q.get('meter') ?? 100));

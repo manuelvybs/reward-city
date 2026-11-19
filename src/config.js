@@ -1,7 +1,7 @@
 // Reward City — tuning numbers, palette, cards and strings shared by the game, the viewer and the tests.
 
 export const TUNING = {
-  heroHeight: 1.2,      // metres
+  heroHeight: 1.37,     // metres (stretched astronaut: same helmet size as the 1.2 m chibi)
   walk: 2.6,            // m/s
   walkBeam: 1.6,        // m/s while beaming
   jump: 6.2,            // m/s take-off

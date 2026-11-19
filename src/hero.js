@@ -14,12 +14,12 @@ const ONCE = new Set(['jump', 'land', 'cheer']);
 // `side` (+1 = the camera is on the hero's left) so the screen always turns toward the camera; pos.x too, so
 // the phone sits a little toward the camera, in front of the near arm.
 const POSES = {
-  carry: { pos: [0.035, 0.365, 0.180], top: [0, 0.90, 0.44], normal: [0.70, 0.30, -0.65] },
-  play:  { pos: [0.030, 0.410, 0.175], top: [0, 0.75, 0.66], normal: [0.55, 0.55, -0.62] },
-  beam:  { pos: [0.020, 0.395, 0.195], top: [0, 0.30, 0.95], normal: [0.80, 0.55, -0.15] },
+  carry: { pos: [0.030, 0.555, 0.215], top: [0, 1.00, 0.15], normal: [0.72, 0.15, -0.68] },
+  play:  { pos: [0.025, 0.615, 0.245], top: [0, 0.85, 0.53], normal: [0.55, 0.45, -0.70] },
+  beam:  { pos: [0.020, 0.585, 0.240], top: [0, 0.80, 0.60], normal: [0.78, 0.40, -0.48] },
 };
 for (const p of Object.values(POSES)) { p.v = new THREE.Vector3(...p.pos); p.t = new THREE.Vector3(...p.top); p.n = new THREE.Vector3(...p.normal); }
-const GRIP_X = PHONE.w / 2 - 0.004, GRIP_Y = -0.03;
+const GRIP_X = PHONE.w / 2 - 0.006, GRIP_Y = -0.075, GRIP_Y_NEAR = 0.0;
 
 export async function loadHero(screenTex, url = HERO.url) {
   const loader = new GLTFLoader();
@@ -63,6 +63,7 @@ class Hero {
     this.yaw = Math.PI / 2 - HERO.camTurn;
     this.name = ''; this.current = null; this.saved = null;
     this.spout = new THREE.Vector3();
+    this.ik = true; this.animate = true;          // debug switches (viewer ?noik ?bind)
   }
 
   play(name, speed = 1, fade = 0.2) {
@@ -85,7 +86,7 @@ class Hero {
     else if (!s.onGround) anim = s.vy > 0.5 ? 'jump' : 'fall';
     else if (Math.abs(s.vx) > 0.15) { anim = 'walk'; speed = Math.abs(s.vx) / 1.6; }
     this.play(anim, anim === 'jump' ? 1.6 : speed, anim === 'jump' ? 0.08 : 0.2);
-    this.mixer.update(dt);
+    if (this.animate) this.mixer.update(dt);
 
     const k = 1 - Math.exp(-8 * dt);
     this.w.beam += ((s.beam ? 1 : 0) - this.w.beam) * k;
@@ -99,7 +100,7 @@ class Hero {
 
     this.saved = this.ikBones.map(bone => [bone, bone.quaternion.clone()]);
     this.placePhone();
-    this.reachPhone();
+    if (this.ik) this.reachPhone();
     if (this.w.play > 0.01) this.nod(this.w.play);
     this.phone.setGlow(Math.max(this.w.beam, this.w.play));
     this.phone.userData.spout.getWorldPosition(this.spout);
@@ -125,15 +126,16 @@ class Hero {
 
   reachPhone() {
     const side = v3.set(1, 0, 0).applyQuaternion(this.root.quaternion);      // hero's left in world space
-    // which phone edge is on the hero's left?
-    const px = v2.set(1, 0, 0).applyQuaternion(this.phone.quaternion).x >= 0 ? 1 : -1;
+    // the screen faces the camera, so the phone's width runs front-to-back: both hands take the edge nearest
+    // the body (the camera-side hand higher, the far hand lower and hidden behind the phone), so no arm
+    // crosses the screen
+    const backX = v2.set(1, 0, 0).applyQuaternion(this.phone.quaternion).z > 0 ? -GRIP_X : GRIP_X;
+    const nearS = Math.sign(this.side) || -1;
     for (const [arm, fore, hand, s] of [['lArm', 'lFore', 'lHand', 1], ['rArm', 'rFore', 'rHand', -1]]) {
       const A = this.b[arm], B = this.b[fore], C = this.b[hand];
       if (!A || !B || !C) continue;
-      // the hand on the camera side holds the bottom edge so its arm stays below the screen
-      const near = s === (Math.sign(this.side) || -1);
-      const grip = near ? new THREE.Vector3(GRIP_X * 0.3 * px * s, -PHONE.h / 2 + 0.012, -0.004) : new THREE.Vector3(GRIP_X * px * s, GRIP_Y, -0.002);
-      const target = this.phone.localToWorld(grip);
+      const near = s === nearS;
+      const target = this.phone.localToWorld(new THREE.Vector3(backX * (near ? 1 : 0.8), near ? GRIP_Y_NEAR : GRIP_Y, near ? 0.004 : -0.008));
       const pole = new THREE.Vector3(0, -1, 0).addScaledVector(side, s * 0.8).add(new THREE.Vector3(0, 0, -0.4).applyQuaternion(this.root.quaternion));
       twoBoneIK(A, B, C, target, pole);
     }

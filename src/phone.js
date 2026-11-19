@@ -3,7 +3,9 @@
 // Units are the hero model's own (the phone is parented under the scaled GLB scene).
 import * as THREE from 'three';
 
-export const PHONE = { w: 0.100, h: 0.180, d: 0.014, r: 0.018 };
+// sized for the stretched astronaut (model units); the screen keeps the feed composite's aspect (360x591)
+const SCREEN_ASPECT = 360 / 591, W = 0.155, SW = W - 0.012, SH = SW / SCREEN_ASPECT;
+export const PHONE = { w: W, h: SH + 0.018, d: 0.016, r: 0.022, sw: SW, sh: SH };
 
 function roundedRect(w, h, r) {
   const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
@@ -22,22 +24,20 @@ export function makePhone(screenTex) {
 
   const bodyGeo = new THREE.ExtrudeGeometry(roundedRect(w, h, r), { depth: d, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 2, curveSegments: 6 });
   bodyGeo.translate(0, 0, -d / 2);
-  const body = new THREE.Mesh(bodyGeo, new THREE.MeshStandardMaterial({ color: 0x2a2f86, metalness: 0.55, roughness: 0.35 }));
+  const body = new THREE.Mesh(bodyGeo, new THREE.MeshStandardMaterial({ color: 0x3A43C4, metalness: 0.45, roughness: 0.35 }));
   body.castShadow = true;
   g.add(body);
 
-  // screen: crop the tall feed to the screen's aspect (keep the top: balance, missions, first game)
-  const sw = w - 0.008, sh = h - 0.012;
-  if (screenTex) {
-    screenTex.colorSpace = THREE.SRGBColorSpace;
-    const texAspect = screenTex.image ? screenTex.image.width / screenTex.image.height : 360 / 804;
-    const keep = Math.min(1, texAspect / (sw / sh));
-    screenTex.repeat.set(1, keep);
-    screenTex.offset.set(0, 1 - keep);
-  }
+  // black bezel, then the screen (the feed composite fills it exactly)
+  const bezel = new THREE.Mesh(new THREE.ShapeGeometry(roundedRect(w - 0.004, h - 0.004, r - 0.002), 6), new THREE.MeshBasicMaterial({ color: 0x0b0d22 }));
+  bezel.position.z = d / 2 + 0.0024;
+  g.add(bezel);
+  const { sw, sh } = PHONE;
+  if (screenTex) screenTex.colorSpace = THREE.SRGBColorSpace;
   const screenMat = new THREE.MeshBasicMaterial({ map: screenTex || null, color: 0xffffff, toneMapped: false });
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(sw, sh), screenMat);
-  screen.position.z = d / 2 + 0.0026;
+  const screen = new THREE.Mesh(new THREE.ShapeGeometry(roundedRect(sw, sh, 0.012), 6), screenMat);
+  uvFromBounds(screen.geometry, sw, sh);
+  screen.position.z = d / 2 + 0.0032;
   g.add(screen);
 
   // soft halo in front of the screen, visible from the side camera while playing / beaming
@@ -54,11 +54,18 @@ export function makePhone(screenTex) {
   g.userData = { screen, halo, spout };
   // v: 0 idle, 1 playing / beaming
   g.setGlow = (v) => {
-    screenMat.color.setScalar(1 + 0.6 * v);
-    halo.material.opacity = 0.15 + 0.6 * v;
+    screenMat.color.setScalar(0.92 + 0.18 * v);
+    halo.material.opacity = 0.08 + 0.35 * v;
   };
   g.setGlow(0);
   return g;
+}
+
+// ShapeGeometry UVs are in shape units; map them to 0..1 over the screen rectangle
+function uvFromBounds(geo, w, h) {
+  const p = geo.attributes.position, uv = geo.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / w + 0.5, p.getY(i) / h + 0.5);
+  uv.needsUpdate = true;
 }
 
 let _halo = null;

@@ -13,3 +13,4 @@ art-src/audio/raw/
 art-src/**/*.glb
 art-src/**/*.url
 tools/fal-log.jsonl
+art-src/live*/

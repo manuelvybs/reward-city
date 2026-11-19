@@ -211,8 +211,8 @@ function drawnUnderHero() {
   if (!onBridge && !onStairs) return null;
   const m = onBridge ? cards.bridge.mesh : cards.tower.mesh;
   _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
-  const culled = m.frustumCulled && !_fr.intersectsObject(m);
-  const shown = m.isInstancedMesh ? m.count > 0 : (m.material.uniforms?.uReveal?.value ?? 1) > 0.95;
+  const culled = m.isMesh && m.frustumCulled && !_fr.intersectsObject(m);     // groups have no bounds of their own
+  const shown = m.isGroup ? (m.userData.grown ?? 1) > 0.95 : m.isInstancedMesh ? m.count > 0 : (m.material.uniforms?.uReveal?.value ?? 1) > 0.95;
   return { what: onBridge ? 'bridge' : 'stairs', drawn: m.visible && shown && !culled };
 }
 function makeBlob() {

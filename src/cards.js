@@ -6,7 +6,6 @@ import { OPEN_TIME } from './game.js';
 import { BEAM } from './config.js';
 
 const BRAND_HUES = { amazon: 0x232f3e, visa: 0x1a1f71, starbucks: 0x00704a, netflix: 0xb20710, walmart: 0x0071ce, doordash: 0xeb1700, paypal: 0x003087, cashapp: 0x00c244 };
-const HUE_LIST = Object.values(BRAND_HUES);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const easeOut = (t) => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
 const back = (t) => { t = clamp(t, 0, 1); const s = 1.7; return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2); };
@@ -58,21 +57,33 @@ export class CardsView {
     scene.add(bridge);
     this.bridge = { mesh: bridge, t: -1 };
 
-    // stairs: stacks of card slabs rising to each step top
-    const slabs = [];
-    let prevTop = 0.3;
-    TOWER.steps.forEach((s, i) => {
-      const x1 = i < TOWER.steps.length - 1 ? TOWER.steps[i + 1].x0 : s.x1;
-      for (let y = 0.3, k = 0; y < s.y - 1e-6; y += 0.075, k++) slabs.push({ x: (s.x0 + x1) / 2, w: x1 - s.x0, y: Math.min(y + 0.075, s.y), i, k, hue: HUE_LIST[(i * 3 + k) % HUE_LIST.length], twist: ((i * 7 + k * 13) % 9 - 4) * 0.012 });
-      prevTop = s.y;
+    // stairs: each step is a painted pile of gift cards (watercolour + ink): a cap (the top card, whose face is the
+    // step) plus body slices cut from different heights of the same pile so no two steps look alike
+    const PW = 0.66, pm = paint.man.pile, PH = PW / (pm.w / pm.h);            // full pile height at this width
+    const CAP = 0.09, WALK = 0.03, BODY0 = 0.02;                              // fractions of the pile height
+    const rnd = ((s) => () => ((s = (s * 16807) % 2147483647) / 2147483647))(42);
+    const towerGroup = new THREE.Group();
+    this.steps = TOWER.steps.map((st, i) => {
+      const g = new THREE.Group(), x1 = i < TOWER.steps.length - 1 ? TOWER.steps[i + 1].x0 : st.x1, cx = (st.x0 + x1) / 2;
+      const flip = i % 3 === 1, z = -0.15 - i * 0.012;
+      const capBottom = st.y + WALK * PH - CAP * PH;
+      const cap = paint.sprite('pile', { x: 0, y: capBottom, z, uv: [0, 1 - CAP, 1, 1], h: CAP * PH, force: 1, flip });
+      g.add(cap);
+      let top = capBottom, bottom = 0.22;
+      while (top > bottom + 1e-3) {
+        const len = Math.min(top - bottom, (1 - CAP - BODY0) * PH * 0.85), span = len / PH;
+        const v0 = BODY0 + rnd() * (1 - CAP - BODY0 - span);
+        g.add(paint.sprite('pile', { x: 0, y: top - len, z, uv: [0, v0, 1, v0 + span], h: len, force: 1, flip }));
+        top -= len;
+      }
+      g.position.x = cx; g.userData.height = st.y + WALK * PH - bottom;
+      towerGroup.add(g);
+      return g;
     });
-    this.slabs = slabs;
-    this.tower = { mesh: new THREE.InstancedMesh(new THREE.BoxGeometry(1, 0.07, 1.5), new THREE.MeshStandardMaterial({ roughness: 0.45 }), slabs.length), t: -1 };
-    slabs.forEach((s, i) => this.tower.mesh.setColorAt(i, new THREE.Color(s.hue)));
-    this.tower.mesh.castShadow = this.tower.mesh.receiveShadow = true;
-    this.tower.mesh.count = 0;
-    this.tower.mesh.frustumCulled = false;                   // same as the bridge
-    scene.add(this.tower.mesh);
+    towerGroup.visible = false;
+    towerGroup.userData.grown = 0;
+    scene.add(towerGroup);
+    this.tower = { mesh: towerGroup, t: -1 };
 
     // gift box: painted, closed until the finale, then the opened painting with its lid off
     const closed = paint.sprite('box-closed', { x: 0, y: -0.05, z: 0, h: 3.2 });
@@ -125,17 +136,17 @@ export class CardsView {
       b.mesh.visible = true;
       b.mesh.material.uniforms.uReveal.value = easeOut(clamp(b.t / 1.3, 0, 1));
     }
-    // stairs stack up once card 6 opens
+    // the piles grow up out of the plaza one after another once card 6 opens (hidden inside the plaza until then)
     if (game.tower) {
       const tw = this.tower; tw.t = tw.t < 0 ? (game.cards[5].openedAt < -50 ? 9 : 0) : tw.t + dt;
-      const m = new THREE.Matrix4(), q = new THREE.Quaternion(), ax = new THREE.Vector3(0, 1, 0);
-      tw.mesh.count = this.slabs.length;
-      this.slabs.forEach((s, i) => {
-        const k = clamp((tw.t - s.i * 0.12 - s.k * 0.008) / 0.25, 0, 1);
-        m.compose(new THREE.Vector3(s.x, s.y - 0.035 + (1 - k) * 2.5, -0.2), q.setFromAxisAngle(ax, s.twist), new THREE.Vector3(s.w * 0.98, k > 0 ? 1 : 0.001, 1));
-        tw.mesh.setMatrixAt(i, m);
+      tw.mesh.visible = true;
+      let least = 1;
+      this.steps.forEach((g, i) => {
+        const k = back((tw.t - i * 0.11) / 0.4);
+        g.position.y = -(1 - clamp(k, 0, 1)) * g.userData.height;
+        least = Math.min(least, clamp((tw.t - i * 0.11) / 0.4, 0, 1));
       });
-      tw.mesh.instanceMatrix.needsUpdate = true;
+      tw.mesh.userData.grown = least;
     }
     // gift box: shakes when refused, glows toward colour once every card is in, swaps to the opened painting
     const bx = this.box, gb = game.box;

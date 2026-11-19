@@ -281,5 +281,13 @@
   "main": 1,
   "deckTop": 0.3418,
   "deckBottom": 0.725
+ },
+ "pile": {
+  "file": "pile.webp",
+  "w": 405,
+  "h": 1400,
+  "metresH": 2.2,
+  "metresW": 0.637,
+  "main": 1
  }
 }

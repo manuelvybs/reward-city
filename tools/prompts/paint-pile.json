@@ -1,0 +1,10 @@
+{
+  "prompt": "Use exactly the art style of the reference image: loose watercolour washes over a fine, slightly wobbly hand-drawn black ink line, granulating watercolour paper texture. Paint ONE single very tall, narrow pile of giant gift cards stacked flat on top of each other, seen from the side and slightly from above so the face of the top card shows as a thin band at the very top. Dozens of cards in the stack, each card's edge a different colour (deep indigo, periwinkle blue, emerald green, warm red, gold, lavender, teal, coral) in a gently wobbly but straight vertical column, the top card has a small gold chip, NO logos, NO letters, NO text. The pile is centred and fills the whole height of the image from the top edge to the bottom edge, and is about a quarter of the image wide. Isolated on a plain flat pure white background, nothing else: no ground, no floor line, no cast shadow, no text.",
+  "image_urls": [
+    "https://v3b.fal.media/files/b/0ab3137b/b8n5uS38tqY0l7D-6NFaI_concept-b-ink.png"
+  ],
+  "aspect_ratio": "9:16",
+  "resolution": "2K",
+  "output_format": "png",
+  "num_images": 3
+}

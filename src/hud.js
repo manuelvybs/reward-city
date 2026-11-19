@@ -7,11 +7,11 @@ export class Hud {
   constructor() {
     this.slots = CARDS.map(b => {
       const d = document.createElement('div'); d.className = 'slot';
-      const img = document.createElement('img'); img.src = `assets/cards/${b}.png`; img.alt = b;
+      const img = document.createElement('img'); img.src = `assets/cards/${b}.webp`; img.alt = b;
       d.appendChild(img); $('slots').appendChild(d);
       return d;
     });
-    for (const b of CARDS) { const img = document.createElement('img'); img.src = `assets/cards/${b}.png`; img.alt = b; $('endCards').appendChild(img); }
+    for (const b of CARDS) { const img = document.createElement('img'); img.src = `assets/cards/${b}.webp`; img.alt = b; $('endCards').appendChild(img); }
     $('endLine').textContent = GAME.endLine;
     this.hintText = ''; this.hintUntil = 0; this.flashUntil = 0;
   }

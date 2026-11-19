@@ -9,3 +9,7 @@ art-src/**/*.mp4
 tools/playtest-video/
 art-src/**/*.jpg
 tools/playtest-phone/
+art-src/audio/raw/
+art-src/**/*.glb
+art-src/**/*.url
+tools/fal-log.jsonl

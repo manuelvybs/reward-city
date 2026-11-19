@@ -15,7 +15,7 @@ export async function loadCardTextures(brands) {
   const loader = new THREE.TextureLoader();
   const out = {};
   await Promise.all(brands.map(async b => {
-    const t = await loader.loadAsync(`assets/cards/${b}.png`).catch(() => loader.loadAsync(`assets/cards/${b}.png`));
+    const t = await loader.loadAsync(`assets/cards/${b}.webp`).catch(() => loader.loadAsync(`assets/cards/${b}.webp`));
     t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; out[b] = t;
   }));
   return out;

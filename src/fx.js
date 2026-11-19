@@ -52,8 +52,10 @@ export class Fx {
   // locked cards catch the light now and then
   glint(x, y) { this.add('spark', { x, y, z: 0.05, life: 0.9, size: 0.38, grow: -0.6, color: new THREE.Color('#fff2c8'), vr: 1.5 }); }
   dust(x, y) { for (let i = 0; i < 6; i++) this.add('dot', { x: x + R(-0.25, 0.25), y: y + 0.05, z: R(-0.1, 0.3), vx: R(-0.9, 0.9), vy: R(0.1, 0.5), drag: 3, life: R(0.4, 0.7), size: R(0.18, 0.32), grow: 1.2, color: new THREE.Color('#b9b3a8') }); }
-  // coins sparkle up out of the phone while the hero plays at a kiosk
-  playSparkle(x, y) { this.add('spark', { x: x + R(-0.08, 0.08), y, z: 0.25, vx: R(-0.3, 0.3), vy: R(0.8, 1.6), drag: 1, life: R(0.5, 0.8), size: R(0.1, 0.18), color: Math.random() < 0.7 ? PAL[3] : PAL[2] }); }
+  // twinkles that stay right at the phone (playing at a kiosk, redeeming): nothing streams away from the hero
+  playSparkle(x, y) { this.add('spark', { x: x + R(-0.14, 0.14), y: y + R(-0.12, 0.1), z: 0.3, life: R(0.25, 0.4), size: R(0.08, 0.15), grow: -0.5, color: Math.random() < 0.7 ? PAL[3] : PAL[5], vr: R(-3, 3) }); }
+  // a coin pops into existence next to the card
+  coinPop(x, y) { this.add('spark', { x, y, z: 0.2, life: 0.22, size: 0.22, grow: -0.7, color: PAL[3] }); }
   // finale: confetti falling over the whole view, and the gift cards tumbling down with it
   rain(camX, camY, dt) {
     const n = Math.random() < dt * 90 ? 2 : 0;

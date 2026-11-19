@@ -33,11 +33,18 @@ export class CardsView {
       face.position.y = (CARD.y0 + CARD.y1) / 2;
       const backing = new THREE.Mesh(new THREE.BoxGeometry(CARD.w * 0.98, CARD.h * 0.98, 0.03), new THREE.MeshStandardMaterial({ color: 0x9a978f }));
       backing.position.set(0, face.position.y, -0.02); backing.castShadow = true;
-      g.add(post, backing, face);
+      // progress bar under the card: fills gold as coins land
+      const barBg = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.075), new THREE.MeshBasicMaterial({ color: 0x2b2f7a, transparent: true, opacity: 0.55, depthWrite: false }));
+      barBg.position.set(0, CARD.y0 - 0.1, 0.02);
+      const barGeo = new THREE.PlaneGeometry(0.86, 0.045); barGeo.translate(0.43, 0, 0);
+      const bar = new THREE.Mesh(barGeo, new THREE.MeshBasicMaterial({ color: 0xFFD401, toneMapped: false }));
+      bar.position.set(-0.43, CARD.y0 - 0.1, 0.025); bar.scale.x = 0.001;
+      barBg.visible = bar.visible = false;
+      g.add(post, backing, face, barBg, bar);
       g.position.set(c.x, c.y, -0.15);
       scene.add(g);
       if (c.state !== 'locked') { face.material.map = tex[c.brand]; backing.material.color.setHex(BRAND_HUES[c.brand]); }   // opened before the view existed
-      return { g, face, backing, shake: 0, popped: false };
+      return { g, face, backing, bar, barBg, shake: 0, popped: false };
     });
 
     // bridge: gift cards laid side by side across the gap
@@ -95,8 +102,11 @@ export class CardsView {
         v.g.position.x = c.x + Math.sin(game.time * 70) * v.shake * 0.06;
         const warm = c.hits / BEAM.need;                       // warms toward gold as it fills
         v.face.material.color.setRGB(1, 1 - warm * 0.12, 1 - warm * 0.45);
+        v.bar.visible = v.barBg.visible = c.hits > 0;
+        v.bar.scale.x = Math.max(0.001, warm);
       } else {
         v.g.position.x = c.x;
+        v.bar.visible = v.barBg.visible = false;
         const t = c.state === 'opening' ? c.t / OPEN_TIME : 1;
         const s = c.state === 'opening' ? 1 + Math.sin(t * Math.PI) * 0.45 : 1;
         v.face.scale.setScalar(s);

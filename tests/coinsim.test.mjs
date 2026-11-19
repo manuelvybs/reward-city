@@ -35,39 +35,40 @@ test('playing refills at 55/s and caps at 100', () => {
   assert.equal(m.full, true);
 });
 
-test('coins pop UP out of the phone first, like a fountain', () => {
+test('coins appear around the card, never at the hero', () => {
   const rnd = seeded();
-  for (let k = 0; k < 20; k++) {
-    const c = launch({ x: 0.2, y: 1.0 }, 1, rnd, centre);
-    let top = c.y;
-    for (let i = 0; i < 0.3 / DT; i++) { stepCoin(c, DT); top = Math.max(top, c.y); }
-    assert.ok(top > 1.0 + 0.45, `top ${top}`);
+  for (let k = 0; k < 40; k++) {
+    const spout = { x: 0.2, y: 1.0 };
+    const c = launch(spout, 1, rnd, centre);
+    const fromCard = Math.hypot(c.x - centre.x, c.y - centre.y), fromHero = Math.hypot(c.x - spout.x, c.y - spout.y);
+    assert.ok(fromCard >= 0.8 && fromCard <= 1.8, `spawned ${fromCard.toFixed(2)} m from the card`);
+    assert.ok(fromHero > 1.0, `spawned ${fromHero.toFixed(2)} m from the hero`);
+    assert.ok(c.y > centre.y - 0.5, 'not spawned below the card');
   }
 });
 
-test('every coin reaches the card within 1.3 s from near, far, either side and below, and hits it once', () => {
+test('every coin spirals into the card within 0.9 s, wherever the hero stands, and hits it once', () => {
   const rnd = seeded(3);
-  // spouts 1 m to 4.6 m away on both sides, and a card 1.5 m higher than usual (on a step)
-  for (const [sx, face, lift] of [[1.6, 1, 0], [0.2, 1, 0], [-2.0, 1, 0], [3.6, -1, 0], [7.2, -1, 0], [0.2, 1, 1.5]]) {
+  for (const [sx, lift] of [[1.6, 0], [0.2, 0], [-2.0, 0], [3.6, 0], [7.2, 0], [0.2, 1.5]]) {
     const box = { x0: CARD.x0, x1: CARD.x1, y0: CARD.y0 + lift, y1: CARD.y1 + lift };
     for (let k = 0; k < 30; k++) {
-      const c = launch({ x: sx, y: 1.0 }, face, rnd, { x: centre.x + (rnd() - 0.5) * 0.6, y: centre.y + lift + (rnd() - 0.5) * 0.3 });
+      const c = launch({ x: sx, y: 1.0 }, sx < centre.x ? 1 : -1, rnd, { x: centre.x + (rnd() - 0.5) * 0.6, y: centre.y + lift + (rnd() - 0.5) * 0.3 });
       let hits = 0, t = 0;
-      while (t < 1.3 && !c.hit) { stepCoin(c, DT); t += DT; if (hitsBox(c, box)) hits++; }
-      assert.equal(hits, 1, `from ${sx} (lift ${lift}): no hit after ${t.toFixed(2)} s at ${c.x.toFixed(2)},${c.y.toFixed(2)}`);
+      while (t < 0.9 && !c.hit) { stepCoin(c, DT); t += DT; if (hitsBox(c, box)) hits++; }
+      assert.equal(hits, 1, `hero at ${sx} (lift ${lift}): no hit after ${t.toFixed(2)} s at ${c.x.toFixed(2)},${c.y.toFixed(2)}`);
     }
   }
 });
 
-test('no coin ever drops to the floor, even one that misses its card', () => {
+test('no coin ever comes near the floor or the hero', () => {
   const rnd = seeded(11);
-  for (const target of [centre, { x: -40, y: 1 }]) {                // a card, and a target it cannot reach in its life
-    for (let k = 0; k < 30; k++) {
-      const c = launch({ x: 0.2, y: 1.0 }, 1, rnd, target);
-      let low = c.y;
-      while (!coinDone(c) && !c.hit) { stepCoin(c, DT); low = Math.min(low, c.y); if (hitsBox(c, CARD)) break; }
-      assert.ok(low > 0.75, `dipped to ${low}`);
-    }
+  for (let k = 0; k < 40; k++) {
+    const spout = { x: 0.2, y: 1.0 };
+    const c = launch(spout, 1, rnd, centre);
+    let low = c.y, near = Infinity;
+    while (!coinDone(c) && !c.hit) { stepCoin(c, DT); low = Math.min(low, c.y); near = Math.min(near, Math.hypot(c.x - spout.x, c.y - spout.y)); if (hitsBox(c, CARD)) break; }
+    assert.ok(low > 0.55, `dipped to ${low}`);
+    assert.ok(near > 1.0, `came within ${near.toFixed(2)} m of the hero`);
   }
 });
 

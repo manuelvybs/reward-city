@@ -161,7 +161,8 @@ function frame(now) {
   // effects driven by the game state
   if (state !== 'title') {
     if (game.finaleT >= 0) { paint.field.flood(game.time, cam.x, cam.y); fx.rain(cam.x, cam.y + cam.pull * 1.6, sdt); }
-    if (game.playing && Math.random() < sdt * 14) fx.playSparkle(hero.spout.x, hero.spout.y);
+    if ((game.playing || game.beaming) && Math.random() < sdt * 12) fx.playSparkle(hero.spout.x, hero.spout.y - 0.1);
+    for (const c of game.coins) if (!c.popped) { c.popped = true; if (c.target) fx.coinPop(c.x, c.y); }
     for (const c of game.cards) {
       if (c.state !== 'locked' || Math.abs(c.x - p.x) > 14) continue;
       const t = (glints.get(c.i) ?? 0) - sdt;

@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+.omc/
+*.log
+art-src/**/*.raw.*
+art-src/**/*.png
+tools/playtest/

@@ -198,10 +198,22 @@ document.addEventListener('visibilitychange', () => { if (!sound.ctx) return; if
 window.__game = {
   ready: true,
   get game() { return game; }, get state() { return state; }, hero, camera, sound,
-  summary() { const p = game.player; return { x: +p.x.toFixed(2), y: +p.y.toFixed(2), meter: Math.round(game.meter.value), open: game.openCount, finale: game.finaleT >= 0, ended: game.ended, state }; },
+  summary() { const p = game.player; return { x: +p.x.toFixed(2), y: +p.y.toFixed(2), meter: Math.round(game.meter.value), open: game.openCount, finale: game.finaleT >= 0, ended: game.ended, state, drawn: drawnUnderHero() }; },
 };
 
 function groundBelowP(x, y) { return groundBelow(x, y, game.pieces); }
+// playtest check: when the hero stands on the card bridge or the card stairs, are they really drawn under him?
+const _fr = new THREE.Frustum(), _pm = new THREE.Matrix4();
+function drawnUnderHero() {
+  const p = game.player;
+  const onBridge = p.onGround && game.bridge && p.x > 44.2 && p.x < 51.8;
+  const onStairs = game.tower && p.x > 84.6 && p.x < 89.9 && p.y > 0.6;     // hopping up: on the ground only for an instant
+  if (!onBridge && !onStairs) return null;
+  const m = onBridge ? cards.bridge.mesh : cards.tower.mesh;
+  _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+  const culled = m.frustumCulled && !_fr.intersectsObject(m);
+  return { what: onBridge ? 'bridge' : 'stairs', drawn: m.visible && m.count > 0 && !culled };
+}
 function makeBlob() {
   const c = document.createElement('canvas'); c.width = c.height = 64;
   const g = c.getContext('2d'), r = g.createRadialGradient(32, 32, 2, 32, 32, 32);

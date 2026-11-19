@@ -25,12 +25,14 @@ const t0 = Date.now();
 await page.goto(`${base}?autopilot&speed=${speed}${video ? '&recordaudio' : ''}`);
 await page.waitForFunction(() => window.__game?.ready, null, { timeout: 30000 });
 let open = -1, finale = false, s = null;
+const seen = {};
 const shots = [];
 const limit = 200000 / speed + 20000;
 while (Date.now() - t0 < limit) {
   s = await page.evaluate(() => window.__game.summary());
   if (s.open !== open) { open = s.open; if (open > 0) { await page.waitForTimeout(700 / speed); const f = join(out, `card${open}.png`); await page.screenshot({ path: f }); shots.push(f); } }
   if (s.finale && !finale) { finale = true; await page.waitForTimeout(4000 / speed); const f = join(out, 'finale.png'); await page.screenshot({ path: f }); shots.push(f); }
+  if (s.drawn) { seen[s.drawn.what] = seen[s.drawn.what] || 0; if (!s.drawn.drawn) errors.push(`${s.drawn.what} not drawn under the hero at x ${s.x}`); else seen[s.drawn.what]++; }
   if (s.state === 'end') { await page.waitForTimeout(1500); const f = join(out, 'end.png'); await page.screenshot({ path: f }); shots.push(f); break; }
   await page.waitForTimeout(150);
 }
@@ -55,8 +57,10 @@ if (video) {
     mp4 = join(out, 'playtest.mp4');
   }
 }
+if (!seen.bridge) errors.push('never saw the hero standing on a drawn card bridge');
+if (!seen.stairs) errors.push('never saw the hero standing on drawn card stairs');
 const ok = s?.state === 'end' && errors.length === 0;
-const result = { ok, secs: Math.round((Date.now() - t0) / 1000), speed, last: s, errors, shots, video: mp4 };
+const result = { ok, seen, secs: Math.round((Date.now() - t0) / 1000), speed, last: s, errors, shots, video: mp4 };
 writeFileSync(join(out, 'result.json'), JSON.stringify(result, null, 2));
-console.log(JSON.stringify({ ok, secs: result.secs, last: s, errors: errors.slice(0, 5) }));
+console.log(JSON.stringify({ ok, secs: result.secs, seen, last: s, errors: [...new Set(errors)].slice(0, 5) }));
 process.exit(ok ? 0 : 1);

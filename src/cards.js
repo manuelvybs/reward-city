@@ -53,6 +53,9 @@ export class CardsView {
     for (let i = 0; i < n; i++) this.bridge.mesh.setColorAt(i, new THREE.Color(HUE_LIST[i % HUE_LIST.length]));
     this.bridge.mesh.castShadow = this.bridge.mesh.receiveShadow = true;
     this.bridge.mesh.count = 0;
+    // instanced meshes compute their bounds once, on the first frame, when no plank exists yet (a tiny sphere at the
+    // origin): with culling on, the grown bridge would never be drawn once the camera has moved away from x 0
+    this.bridge.mesh.frustumCulled = false;
     scene.add(this.bridge.mesh);
 
     // stairs: stacks of card slabs rising to each step top
@@ -68,6 +71,7 @@ export class CardsView {
     slabs.forEach((s, i) => this.tower.mesh.setColorAt(i, new THREE.Color(s.hue)));
     this.tower.mesh.castShadow = this.tower.mesh.receiveShadow = true;
     this.tower.mesh.count = 0;
+    this.tower.mesh.frustumCulled = false;                   // same as the bridge
     scene.add(this.tower.mesh);
 
     // gift box: painted, closed until the finale, then the opened painting with its lid off
